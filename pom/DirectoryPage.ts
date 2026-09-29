@@ -20,7 +20,7 @@ export class DirectoryPage extends BasePage {
     this.locationDropdown = page.locator('.oxd-input-group:has-text("Location") .oxd-select-text');
     this.searchButton = page.getByRole('button', { name: 'Search' });
     this.resetButton = page.getByRole('button', { name: 'Reset' });
-    this.recordsFoundLabel = page.locator('.orangehrm-horizontal-padding span').first();
+    this.recordsFoundLabel = page.locator('span').filter({ hasText: /Records? Found|No Records Found/i }).first();
     this.cardGrid = page.locator('.orangehrm-container');
     this.cardsGrid = page.locator('.orangehrm-container');
     this.employeeCards = page.locator('.orangehrm-directory-card, .oxd-sheet');
@@ -76,6 +76,36 @@ export class DirectoryPage extends BasePage {
     await responsePromise;
     await this.recordsFoundLabel.waitFor({ state: 'visible', timeout: 8000 }).catch(() => null);
     return selectedText;
+  }
+
+  async filterByJobTitleAndLocation(jobTitle: string, location: string): Promise<void> {
+    // 1. Select Job Title
+    await this.jobTitleDropdown.click();
+    await this.page.locator('.oxd-select-dropdown').waitFor({ state: 'visible', timeout: 5000 });
+    const jobOption = this.page.locator(`.oxd-select-dropdown .oxd-select-option:has-text("${jobTitle}")`);
+    if (await jobOption.count() > 0) {
+      await jobOption.first().click();
+    } else {
+      await this.page.locator('.oxd-select-dropdown .oxd-select-option:not(:has-text("-- Select --"))').first().click();
+    }
+
+    // 2. Select Location
+    await this.locationDropdown.click();
+    await this.page.locator('.oxd-select-dropdown').waitFor({ state: 'visible', timeout: 5000 });
+    const locOption = this.page.locator(`.oxd-select-dropdown .oxd-select-option:has-text("${location}")`);
+    if (await locOption.count() > 0) {
+      await locOption.first().click();
+    } else {
+      await this.page.locator('.oxd-select-dropdown .oxd-select-option:not(:has-text("-- Select --"))').first().click();
+    }
+
+    const responsePromise = this.page.waitForResponse(
+      (res) => res.url().includes('/api/v2/directory/employees'),
+      { timeout: 8000 }
+    ).catch(() => null);
+    await this.searchButton.click();
+    await responsePromise;
+    await this.recordsFoundLabel.waitFor({ state: 'visible', timeout: 8000 }).catch(() => null);
   }
 
   async reset(): Promise<void> {

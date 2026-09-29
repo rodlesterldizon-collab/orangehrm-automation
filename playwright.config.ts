@@ -17,8 +17,7 @@ const baseUrl =
 const authFile = 'playwright/.auth/admin.json';
 
 export default defineConfig({
-  testDir: '.',
-  testMatch: ['tests/**/*.setup.ts', 'tests/e2e/**/*.spec.ts', 'tests/api/**/*.spec.ts'],
+  testDir: './tests',
   fullyParallel: true,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 0,
@@ -52,7 +51,7 @@ export default defineConfig({
     // ─────────────────────────────────────────────────────────────
     {
       name: 'desktop-chrome',
-      testDir: 'tests/e2e',
+      testMatch: /e2e\/.*\.spec\.ts/,
       dependencies: ['setup'],
       use: {
         ...devices['Desktop Chrome'],
@@ -62,7 +61,7 @@ export default defineConfig({
     },
     {
       name: 'desktop-edge',
-      testDir: 'tests/e2e',
+      testMatch: /e2e\/.*\.spec\.ts/,
       dependencies: ['setup'],
       use: {
         ...devices['Desktop Edge'],
@@ -72,7 +71,7 @@ export default defineConfig({
     },
     {
       name: 'desktop-safari',
-      testDir: 'tests/e2e',
+      testMatch: /e2e\/.*\.spec\.ts/,
       dependencies: ['setup'],
       use: {
         ...devices['Desktop Safari'],
@@ -86,7 +85,7 @@ export default defineConfig({
     // ─────────────────────────────────────────────────────────────
     {
       name: 'tablet',
-      testDir: 'tests/e2e',
+      testMatch: /e2e\/.*\.spec\.ts/,
       dependencies: ['setup'],
       grep: /@tablet/,
       use: {
@@ -97,7 +96,7 @@ export default defineConfig({
     },
     {
       name: 'mobile',
-      testDir: 'tests/e2e',
+      testMatch: /e2e\/.*\.spec\.ts/,
       dependencies: ['setup'],
       grep: /@mobile/,
       use: {
@@ -113,7 +112,7 @@ export default defineConfig({
     // ─────────────────────────────────────────────────────────────
     {
       name: 'api',
-      testDir: 'tests/api',
+      testMatch: /api\/.*\.spec\.ts/,
       use: {
         baseURL: baseUrl,
         extraHTTPHeaders: {
