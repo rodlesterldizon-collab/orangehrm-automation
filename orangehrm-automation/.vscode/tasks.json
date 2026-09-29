@@ -1,0 +1,67 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Playwright: Run All Tests",
+      "type": "shell",
+      "command": "npm test",
+      "group": {
+        "kind": "test",
+        "isDefault": true
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "Playwright: Run Desktop Cross-Browser (Chrome, Edge, Safari)",
+      "type": "shell",
+      "command": "npm run test:desktop",
+      "group": "test",
+      "problemMatcher": []
+    },
+    {
+      "label": "Playwright: Run API & AJV Schema Contract Suite",
+      "type": "shell",
+      "command": "npm run test:api",
+      "group": "test",
+      "problemMatcher": []
+    },
+    {
+      "label": "Playwright: Run Tablet Viewport Suite (@tablet)",
+      "type": "shell",
+      "command": "npm run test:tablet",
+      "group": "test",
+      "problemMatcher": []
+    },
+    {
+      "label": "Playwright: Run Mobile Viewport Suite (@mobile)",
+      "type": "shell",
+      "command": "npm run test:mobile",
+      "group": "test",
+      "problemMatcher": []
+    },
+    {
+      "label": "AI Tool: Generate Test Plan & Spec Boilerplate",
+      "type": "shell",
+      "command": "node --experimental-strip-types tools/test-planner.ts",
+      "problemMatcher": []
+    },
+    {
+      "label": "AI Tool: Run Autonomous Test Healer & Locator Audit",
+      "type": "shell",
+      "command": "node --experimental-strip-types tools/test-healer.ts",
+      "problemMatcher": []
+    },
+    {
+      "label": "Playwright: Open Interactive UI Mode",
+      "type": "shell",
+      "command": "npm run test:ui",
+      "problemMatcher": []
+    },
+    {
+      "label": "Playwright: Show HTML Report",
+      "type": "shell",
+      "command": "npm run report",
+      "problemMatcher": []
+    }
+  ]
+}

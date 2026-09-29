@@ -1,0 +1,255 @@
+name: OrangeHRM Automated Test Pipeline
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+  workflow_dispatch:
+
+jobs:
+  # ─────────────────────────────────────────────────────────────────
+  # Job 1: REST API Contract & AJV Schema Suite
+  # ─────────────────────────────────────────────────────────────────
+  api-tests:
+    name: "API & Schema Contract Tests"
+    runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/rodlesterldizon-collab/core-test-suite/test-runner:v1.62.1
+      credentials:
+        username: ${{ github.actor }}
+        password: ${{ secrets.CR_PAT }}
+      options: --ipc=host
+    timeout-minutes: 10
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Install Project Dependencies
+        run: npm ci
+
+      - name: Configure Secure Environment from GitHub Secrets
+        env:
+          SECRET_BASE_URL: ${{ secrets.PLAYWRIGHT_BASE_URL }}
+          SECRET_USERNAME: ${{ secrets.ADMIN_USERNAME }}
+          SECRET_PASSWORD: ${{ secrets.ADMIN_PASSWORD }}
+        run: |
+          cp .env.example .env
+          if [ -n "$SECRET_BASE_URL" ]; then echo "PLAYWRIGHT_BASE_URL=$SECRET_BASE_URL" >> .env; fi
+          if [ -n "$SECRET_USERNAME" ]; then echo "ADMIN_USERNAME=$SECRET_USERNAME" >> .env; fi
+          if [ -n "$SECRET_PASSWORD" ]; then echo "ADMIN_PASSWORD=$SECRET_PASSWORD" >> .env; fi
+          echo "CI=true" >> .env
+
+      - name: Run API Tests & AJV Schema Suite
+        run: npm run test:api
+
+      - name: Publish API Test Run Summary
+        if: always()
+        run: |
+          echo "### 🌐 REST API & AJV Schema Test Run" >> $GITHUB_STEP_SUMMARY
+          echo "| Parameter | Value |" >> $GITHUB_STEP_SUMMARY
+          echo "| :--- | :--- |" >> $GITHUB_STEP_SUMMARY
+          echo "| **Container Image** | \`ghcr.io/rodlesterldizon-collab/core-test-suite/test-runner:v1.62.1\` |" >> $GITHUB_STEP_SUMMARY
+          echo "| **Status** | ${{ job.status }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| **Suite** | \`tests/api/\` (Auth, PIM, Admin, Directory, Schema) |" >> $GITHUB_STEP_SUMMARY
+          echo "| **Schema Engine** | AJV JSON Schema Draft-07/2020-12 |" >> $GITHUB_STEP_SUMMARY
+          echo "| **IPC Mode** | \`--ipc=host\` |" >> $GITHUB_STEP_SUMMARY
+
+      - name: Upload API HTML Test Report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: playwright-report-api
+          path: playwright-report/
+          retention-days: 14
+
+  # ─────────────────────────────────────────────────────────────────
+  # Job 2: Desktop Cross-Browser Matrix (Chromium, Edge, Safari)
+  # ─────────────────────────────────────────────────────────────────
+  desktop-e2e:
+    name: "Desktop Cross-Browser E2E (Chrome, Edge, Safari)"
+    runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/rodlesterldizon-collab/core-test-suite/test-runner:v1.62.1
+      credentials:
+        username: ${{ github.actor }}
+        password: ${{ secrets.CR_PAT }}
+      options: --ipc=host
+    timeout-minutes: 25
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Install Project Dependencies
+        run: npm ci
+
+      - name: Configure Secure Environment from GitHub Secrets
+        env:
+          SECRET_BASE_URL: ${{ secrets.PLAYWRIGHT_BASE_URL }}
+          SECRET_USERNAME: ${{ secrets.ADMIN_USERNAME }}
+          SECRET_PASSWORD: ${{ secrets.ADMIN_PASSWORD }}
+        run: |
+          cp .env.example .env
+          if [ -n "$SECRET_BASE_URL" ]; then echo "PLAYWRIGHT_BASE_URL=$SECRET_BASE_URL" >> .env; fi
+          if [ -n "$SECRET_USERNAME" ]; then echo "ADMIN_USERNAME=$SECRET_USERNAME" >> .env; fi
+          if [ -n "$SECRET_PASSWORD" ]; then echo "ADMIN_PASSWORD=$SECRET_PASSWORD" >> .env; fi
+          echo "CI=true" >> .env
+
+      - name: Run Desktop Cross-Browser E2E Tests
+        run: npm run test:desktop
+
+      - name: Publish Desktop Test Run Summary
+        if: always()
+        run: |
+          echo "### 🖥️ Desktop Cross-Browser E2E Regression Run" >> $GITHUB_STEP_SUMMARY
+          echo "| Parameter | Value |" >> $GITHUB_STEP_SUMMARY
+          echo "| :--- | :--- |" >> $GITHUB_STEP_SUMMARY
+          echo "| **Container Image** | \`ghcr.io/rodlesterldizon-collab/core-test-suite/test-runner:v1.62.1\` |" >> $GITHUB_STEP_SUMMARY
+          echo "| **Status** | ${{ job.status }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| **Browsers Tested** | Google Chrome (Chromium), Microsoft Edge (msedge), Apple Safari (WebKit) |" >> $GITHUB_STEP_SUMMARY
+          echo "| **Resolution** | 1280x720 (Desktop Viewport) |" >> $GITHUB_STEP_SUMMARY
+          echo "| **Artifact** | Download \`playwright-report-desktop\` for traces and videos |" >> $GITHUB_STEP_SUMMARY
+
+      - name: Upload Desktop HTML Test Report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: playwright-report-desktop
+          path: playwright-report/
+          retention-days: 14
+
+  # ─────────────────────────────────────────────────────────────────
+  # Job 3: Tablet Responsive E2E Suite (iPad 810x1080)
+  # ─────────────────────────────────────────────────────────────────
+  tablet-e2e:
+    name: "Tablet Responsive E2E (iPad @tablet)"
+    runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/rodlesterldizon-collab/core-test-suite/test-runner:v1.62.1
+      credentials:
+        username: ${{ github.actor }}
+        password: ${{ secrets.CR_PAT }}
+      options: --ipc=host
+    timeout-minutes: 15
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Install Project Dependencies
+        run: npm ci
+
+      - name: Configure Secure Environment from GitHub Secrets
+        env:
+          SECRET_BASE_URL: ${{ secrets.PLAYWRIGHT_BASE_URL }}
+          SECRET_USERNAME: ${{ secrets.ADMIN_USERNAME }}
+          SECRET_PASSWORD: ${{ secrets.ADMIN_PASSWORD }}
+        run: |
+          cp .env.example .env
+          if [ -n "$SECRET_BASE_URL" ]; then echo "PLAYWRIGHT_BASE_URL=$SECRET_BASE_URL" >> .env; fi
+          if [ -n "$SECRET_USERNAME" ]; then echo "ADMIN_USERNAME=$SECRET_USERNAME" >> .env; fi
+          if [ -n "$SECRET_PASSWORD" ]; then echo "ADMIN_PASSWORD=$SECRET_PASSWORD" >> .env; fi
+          echo "CI=true" >> .env
+
+      - name: Run Tablet Responsive Tests
+        run: npm run test:tablet
+
+      - name: Publish Tablet Test Run Summary
+        if: always()
+        run: |
+          echo "### 📱 Tablet Responsive E2E Run" >> $GITHUB_STEP_SUMMARY
+          echo "| Parameter | Value |" >> $GITHUB_STEP_SUMMARY
+          echo "| :--- | :--- |" >> $GITHUB_STEP_SUMMARY
+          echo "| **Container Image** | \`ghcr.io/rodlesterldizon-collab/core-test-suite/test-runner:v1.62.1\` |" >> $GITHUB_STEP_SUMMARY
+          echo "| **Status** | ${{ job.status }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| **Device Profile** | iPad (gen 7) · 810x1080 |" >> $GITHUB_STEP_SUMMARY
+          echo "| **Target Tag** | \`@tablet\` |" >> $GITHUB_STEP_SUMMARY
+
+      - name: Upload Tablet HTML Test Report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: playwright-report-tablet
+          path: playwright-report/
+          retention-days: 14
+
+  # ─────────────────────────────────────────────────────────────────
+  # Job 4: Mobile Responsive E2E Suite (Pixel 7 393x851)
+  # ─────────────────────────────────────────────────────────────────
+  mobile-e2e:
+    name: "Mobile Responsive E2E (Pixel 7 @mobile)"
+    runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/rodlesterldizon-collab/core-test-suite/test-runner:v1.62.1
+      credentials:
+        username: ${{ github.actor }}
+        password: ${{ secrets.CR_PAT }}
+      options: --ipc=host
+    timeout-minutes: 15
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Install Project Dependencies
+        run: npm ci
+
+      - name: Configure Secure Environment from GitHub Secrets
+        env:
+          SECRET_BASE_URL: ${{ secrets.PLAYWRIGHT_BASE_URL }}
+          SECRET_USERNAME: ${{ secrets.ADMIN_USERNAME }}
+          SECRET_PASSWORD: ${{ secrets.ADMIN_PASSWORD }}
+        run: |
+          cp .env.example .env
+          if [ -n "$SECRET_BASE_URL" ]; then echo "PLAYWRIGHT_BASE_URL=$SECRET_BASE_URL" >> .env; fi
+          if [ -n "$SECRET_USERNAME" ]; then echo "ADMIN_USERNAME=$SECRET_USERNAME" >> .env; fi
+          if [ -n "$SECRET_PASSWORD" ]; then echo "ADMIN_PASSWORD=$SECRET_PASSWORD" >> .env; fi
+          echo "CI=true" >> .env
+
+      - name: Run Mobile Responsive Tests
+        run: npm run test:mobile
+
+      - name: Publish Mobile Test Run Summary
+        if: always()
+        run: |
+          echo "### 📱 Mobile Responsive E2E Run" >> $GITHUB_STEP_SUMMARY
+          echo "| Parameter | Value |" >> $GITHUB_STEP_SUMMARY
+          echo "| :--- | :--- |" >> $GITHUB_STEP_SUMMARY
+          echo "| **Container Image** | \`ghcr.io/rodlesterldizon-collab/core-test-suite/test-runner:v1.62.1\` |" >> $GITHUB_STEP_SUMMARY
+          echo "| **Status** | ${{ job.status }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| **Device Profile** | Google Pixel 7 · 393x851 (Mobile Emulation) |" >> $GITHUB_STEP_SUMMARY
+          echo "| **Target Tag** | \`@mobile\` |" >> $GITHUB_STEP_SUMMARY
+
+      - name: Upload Mobile HTML Test Report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: playwright-report-mobile
+          path: playwright-report/
+          retention-days: 14
+
+  # ─────────────────────────────────────────────────────────────────
+  # Job 5: Consolidated Pipeline Reporting & QA Executive Summary
+  # ─────────────────────────────────────────────────────────────────
+  qa-pipeline-reporting:
+    name: "Pipeline QA Executive Summary"
+    runs-on: ubuntu-latest
+    needs: [api-tests, desktop-e2e, tablet-e2e, mobile-e2e]
+    if: always()
+    steps:
+      - name: Generate Consolidated Executive Summary
+        run: |
+          echo "## 📊 OrangeHRM Automated Test Pipeline Execution Report" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Job / Test Suite | Device / Environment | Status |" >> $GITHUB_STEP_SUMMARY
+          echo "| :--- | :--- | :--- |" >> $GITHUB_STEP_SUMMARY
+          echo "| **REST API & Schema Suite** | Headless Node.js · AJV Engine | ${{ needs.api-tests.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| **Desktop Cross-Browser E2E** | Chromium, MS Edge, WebKit (Safari) | ${{ needs.desktop-e2e.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| **Tablet Responsive E2E** | Apple iPad (810x1080) | ${{ needs.tablet-e2e.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| **Mobile Responsive E2E** | Google Pixel 7 (393x851) | ${{ needs.mobile-e2e.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### 🚀 Container Performance Advantage" >> $GITHUB_STEP_SUMMARY
+          echo "By utilizing \`ghcr.io/rodlesterldizon-collab/core-test-suite/test-runner:v1.62.1\`, the workflow eliminated browser binary downloads on every run, saving ~3 to 4 minutes per job and safeguarding stability via \`--ipc=host\`." >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### 📥 How to Download & View Artifacts" >> $GITHUB_STEP_SUMMARY
+          echo "1. Go to the **Summary** tab of this GitHub Actions run." >> $GITHUB_STEP_SUMMARY
+          echo "2. Under **Artifacts**, download \`playwright-report-api\`, \`playwright-report-desktop\`, \`playwright-report-tablet\`, or \`playwright-report-mobile\`." >> $GITHUB_STEP_SUMMARY
+          echo "3. Extract the ZIP file and run: \`npx playwright show-report <extracted_folder>\`." >> $GITHUB_STEP_SUMMARY

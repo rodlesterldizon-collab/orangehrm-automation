@@ -1,0 +1,20 @@
+# Dependencies
+node_modules/
+
+# Playwright Test Reports & Execution Traces
+test-results/
+playwright-report/
+blob-report/
+playwright/.cache/
+playwright/.auth/
+
+# Secrets & Local Overrides (.env and .env.test ignored; .env.example tracked as safe template)
+.env
+.env.*
+.env.test
+!.env.example
+
+# OS & Logs
+.DS_Store
+Thumbs.db
+*.log

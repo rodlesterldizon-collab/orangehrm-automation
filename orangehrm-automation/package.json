@@ -1,0 +1,59 @@
+{
+  "name": "orangehrm-playwright-automation",
+  "version": "1.0.0",
+  "description": "Production-grade Playwright TypeScript automation framework for OrangeHRM OS 5.9",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "test": "playwright test",
+    "test:desktop": "playwright test tests/e2e --project=desktop-chrome --project=desktop-edge --project=desktop-safari",
+    "test:chrome": "playwright test tests/e2e --project=desktop-chrome",
+    "test:edge": "playwright test tests/e2e --project=desktop-edge",
+    "test:safari": "playwright test tests/e2e --project=desktop-safari",
+    "test:tablet": "playwright test tests/e2e --project=tablet",
+    "test:mobile": "playwright test tests/e2e --project=mobile",
+    "test:api": "playwright test tests/api --project=api",
+    "test:e2e": "playwright test tests/e2e --project=desktop-chrome",
+    "test:schema": "playwright test tests/api/schema.api.spec.ts --project=api",
+    "test:regression": "playwright test tests/e2e --project=desktop-chrome --grep @regression",
+    "test:smoke": "playwright test --grep @smoke",
+    "test:sanity": "playwright test --grep @sanity",
+    "test:headed": "playwright test --headed",
+    "test:ui": "playwright test --ui",
+    "test:debug": "playwright test --debug",
+    "report": "playwright show-report",
+    "plan:generate": "node --experimental-strip-types tools/test-planner.ts",
+    "test:heal": "node --experimental-strip-types tools/test-healer.ts"
+  },
+  "keywords": [
+    "playwright",
+    "typescript",
+    "orangehrm",
+    "automation",
+    "qa",
+    "e2e",
+    "api-testing",
+    "ajv-schema",
+    "page-object-model",
+    "cross-browser",
+    "chromium",
+    "edge",
+    "safari",
+    "responsive-testing",
+    "tablet",
+    "mobile",
+    "test-planner",
+    "self-healing"
+  ],
+  "author": "QA Automation Engineer",
+  "license": "ISC",
+  "dependencies": {
+    "ajv": "^8.17.1"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.48.0",
+    "@types/node": "^22.7.0",
+    "dotenv": "^16.4.5",
+    "typescript": "^5.6.2"
+  }
+}
