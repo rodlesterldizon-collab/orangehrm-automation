@@ -5,7 +5,6 @@ import { Sidebar } from './components/Sidebar.js';
 export class BasePage {
   readonly page: Page;
   readonly request: APIRequestContext;
-  readonly root: Locator;
   readonly navbar: Navbar;
   readonly sidebar: Sidebar;
   readonly toast: Locator;
@@ -15,7 +14,6 @@ export class BasePage {
   constructor(page: Page, request: APIRequestContext) {
     this.page = page;
     this.request = request;
-    this.root = this.page.getByRole('main');
     this.navbar = new Navbar(page);
     this.sidebar = new Sidebar(page);
     this.toast = this.page.getByRole('alert');

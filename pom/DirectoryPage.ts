@@ -2,8 +2,6 @@ import { Page, APIRequestContext, Locator } from '@playwright/test';
 import { BasePage } from './BasePage.js';
 
 export class DirectoryPage extends BasePage {
-  readonly root: Locator;
-  readonly form: Locator;
   readonly searchNameInput: Locator;
   readonly jobTitleDropdown: Locator;
   readonly locationDropdown: Locator;
@@ -21,52 +19,36 @@ export class DirectoryPage extends BasePage {
 
   constructor(page: Page, request: APIRequestContext) {
     super(page, request);
-    this.root = this.page.getByRole('main');
-    this.form = this.root.locator('form').first();
 
-    // Scoped form inputs without using any CSS class names
-    this.searchNameInput = this.form.getByPlaceholder('Type for hints...');
-    this.jobTitleDropdown = this.form
+    // Form inputs using semantic roles, placeholders, and layout-adjacent selectors
+    this.searchNameInput = page.getByPlaceholder('Type for hints...');
+    this.jobTitleDropdown = page
       .locator('div')
-      .filter({ has: this.page.getByText('Job Title', { exact: true }) })
-      .locator('[role="combobox"]')
-      .or(
-        this.form
-          .locator('div')
-          .filter({ has: this.page.getByText('Job Title', { exact: true }) })
-          .locator('i')
-          .locator('..')
-      )
-      .first();
+      .filter({ has: page.getByText('Job Title', { exact: true }) })
+      .locator('i')
+      .locator('..');
 
-    this.locationDropdown = this.form
+    this.locationDropdown = page
       .locator('div')
-      .filter({ has: this.page.getByText('Location', { exact: true }) })
-      .locator('[role="combobox"]')
-      .or(
-        this.form
-          .locator('div')
-          .filter({ has: this.page.getByText('Location', { exact: true }) })
-          .locator('i')
-          .locator('..')
-      )
-      .first();
+      .filter({ has: page.getByText('Location', { exact: true }) })
+      .locator('i')
+      .locator('..');
 
-    this.searchButton = this.form.getByRole('button', { name: 'Search', exact: true });
-    this.resetButton = this.form.getByRole('button', { name: 'Reset', exact: true });
+    this.searchButton = page.getByRole('button', { name: 'Search', exact: true });
+    this.resetButton = page.getByRole('button', { name: 'Reset', exact: true });
 
-    // Results and cards container
-    this.recordsFoundLabel = this.root.getByText(/Records? Found|No Records Found/i).first();
-    this.cardGrid = this.root.locator('div').filter({ has: this.recordsFoundLabel }).last();
+    // Results & records counter
+    this.recordsFoundLabel = page.getByText(/Records? Found|No Records Found/i).first();
+    this.cardGrid = page.locator('.orangehrm-container');
     this.cardsGrid = this.cardGrid;
-    this.gridContainer = this.root.locator('div[role="list"]').or(this.root.locator('main > div'));
-    this.employeeCards = this.root.locator('img[alt*="Profile"], img[alt*="profile"]').locator('..').locator('..');
+    this.gridContainer = page.locator('.oxd-grid-4, .orangehrm-container');
+    this.employeeCards = page.locator('.orangehrm-directory-card, .oxd-grid-item .oxd-sheet');
 
-    // Overlay dropdowns & options
-    this.autocompleteDropdown = this.page.getByRole('listbox').or(this.page.locator('ul[role="menu"]'));
-    this.autocompleteOptions = this.page.getByRole('option');
-    this.selectDropdown = this.page.getByRole('listbox');
-    this.selectOptions = this.page.getByRole('option');
+    // Autocomplete & dropdown overlays
+    this.autocompleteDropdown = page.locator('.oxd-autocomplete-dropdown, [role="listbox"]');
+    this.autocompleteOptions = page.locator('.oxd-autocomplete-option, [role="option"]');
+    this.selectDropdown = page.locator('.oxd-select-dropdown, [role="listbox"]');
+    this.selectOptions = page.locator('.oxd-select-option, [role="option"]');
   }
 
   async navigate(): Promise<void> {
