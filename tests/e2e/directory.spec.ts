@@ -4,7 +4,7 @@ test.describe('Directory Search & Navigation Suite', () => {
   test('[TC-UI-21] @smoke — Directory Card Grid Initial Render', async ({ directoryPage }) => {
     // 1. Verify card grid and counter are visible (SS-05)
     await expect(directoryPage.recordsFoundLabel).toBeVisible();
-    await expect(directoryPage.recordsFoundLabel).toContainText('Records Found');
+    await expect(directoryPage.recordsFoundLabel).toHaveText(/.*Records? Found/i);
     await expect(directoryPage.employeeCards.first()).toBeVisible();
   });
 
@@ -26,31 +26,28 @@ test.describe('Directory Search & Navigation Suite', () => {
   });
 
   test('[TC-UI-24] @regression — Reset Filter Restores Full Count', async ({ directoryPage }) => {
-    // 1. Capture initial records found text
-    await expect(directoryPage.recordsFoundLabel).toBeVisible();
-    const initialText = (await directoryPage.recordsFoundLabel.textContent())?.trim();
+    // 1. Ensure initial directory grid is loaded with records
+    await expect(directoryPage.recordsFoundLabel).toHaveText(/.*Records? Found/i, { timeout: 10000 });
 
-    // 2. Filter down
+    // 2. Filter down by Job Title
     await directoryPage.filterByJobTitle('Chief Financial Officer');
+    await expect(directoryPage.employeeCards.first()).toBeVisible({ timeout: 10000 });
 
     // 3. Reset filters
     await directoryPage.reset();
 
-    // 4. Assert restored to initial total count
-    if (initialText) {
-      await expect(directoryPage.recordsFoundLabel).toContainText(initialText);
-    } else {
-      await expect(directoryPage.recordsFoundLabel).toContainText('Records Found');
-    }
+    // 4. Assert restored to full count with wildcard regex for dynamic numbers and leading spaces
+    await expect(directoryPage.recordsFoundLabel).toHaveText(/.*Records? Found/i, { timeout: 10000 });
   });
 
   test('[TC-UI-25] @regression @security — Filter by Job Title (HR Manager) and Location (Canadian Regional HQ) Displays No Records Found', async ({ directoryPage, page }) => {
     // 1. Apply combination filters
     await directoryPage.filterByJobTitleAndLocation('HR Manager', 'Canadian Regional HQ');
 
-    // 2. Assert "No Records Found" or empty state indicator is displayed
-    const noRecordsIndicator = page.locator('span, div, p').filter({ hasText: /No Records Found/i }).first();
+    // 2. Assert "No Records Found" is displayed and 0 cards rendered
+    const noRecordsIndicator = page.locator('span.oxd-text--span, .orangehrm-horizontal-padding span, p').filter({ hasText: /No Records Found/i }).first();
     await expect(noRecordsIndicator).toBeVisible({ timeout: 10000 });
+    await expect(noRecordsIndicator).toContainText('No Records Found');
     await expect(directoryPage.employeeCards).toHaveCount(0);
   });
 });

@@ -20,7 +20,7 @@ export class DirectoryPage extends BasePage {
     this.locationDropdown = page.locator('.oxd-input-group:has-text("Location") .oxd-select-text');
     this.searchButton = page.getByRole('button', { name: 'Search' });
     this.resetButton = page.getByRole('button', { name: 'Reset' });
-    this.recordsFoundLabel = page.locator('span').filter({ hasText: /Records? Found|No Records Found/i }).first();
+    this.recordsFoundLabel = page.locator('span.oxd-text--span, .orangehrm-horizontal-padding span').filter({ hasText: /Records? Found|No Records Found/i }).first();
     this.cardGrid = page.locator('.orangehrm-container');
     this.cardsGrid = page.locator('.orangehrm-container');
     this.employeeCards = page.locator('.orangehrm-directory-card, .oxd-sheet');
