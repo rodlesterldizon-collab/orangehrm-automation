@@ -43,7 +43,8 @@ test.describe('Admin User Role & Provisioning Suite', () => {
     // 1. Apply filter by User Role "Admin"
     await adminPage.filterByRole('Admin');
 
-    // 2. Assert every returned row in the User Role column displays "Admin"
+    // 2. Ensure rows are visible and assert role column content
+    await expect(adminPage.tableRows.first()).toBeVisible({ timeout: 10000 });
     const userRoleCells = adminPage.page.locator('.oxd-table-card .oxd-table-cell:nth-child(3)');
     const count = await userRoleCells.count();
     expect(count).toBeGreaterThan(0);

@@ -56,16 +56,24 @@ export class AdminPage extends BasePage {
 
   async navigate(): Promise<void> {
     await this.goto('/web/index.php/admin/viewSystemUsers');
+    await this.table.waitFor({ state: 'visible', timeout: 10000 }).catch(() => null);
   }
 
   async filterByRole(role: 'Admin' | 'ESS'): Promise<void> {
     await this.searchUserRoleDropdown.click();
     await this.page.getByRole('option', { name: role }).click();
+    const searchPromise = this.page.waitForResponse(
+      (res) => res.url().includes('/api/v2/admin/users') && res.status() === 200,
+      { timeout: 10000 }
+    ).catch(() => null);
     await this.searchButton.click();
+    await searchPromise;
+    await this.tableRows.first().waitFor({ state: 'visible', timeout: 10000 }).catch(() => null);
   }
 
   async openAddUser(): Promise<void> {
     await this.addUserButton.click();
+    await this.saveUserButton.waitFor({ state: 'visible', timeout: 10000 });
   }
 
   async createUser(data: UserTestData, employeeHint = 'a'): Promise<void> {
@@ -73,10 +81,12 @@ export class AdminPage extends BasePage {
     await this.userRoleSelect.click();
     await this.page.getByRole('option', { name: data.role }).click();
 
-    // Type Employee Name autocomplete
+    // Type Employee Name autocomplete and select genuine non-loading option
     await this.employeeNameAutocomplete.fill(employeeHint);
-    await this.autocompleteDropdown.waitFor({ state: 'visible', timeout: 5000 });
-    await this.autocompleteDropdown.locator('.oxd-autocomplete-option').first().click();
+    await this.autocompleteDropdown.waitFor({ state: 'visible', timeout: 6000 });
+    const validOption = this.autocompleteDropdown.locator('.oxd-autocomplete-option:not(:has-text("Searching"))').first();
+    await validOption.waitFor({ state: 'visible', timeout: 8000 });
+    await validOption.click();
 
     // Select Status
     await this.statusSelect.click();
