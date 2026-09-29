@@ -14,9 +14,11 @@ const baseUrl =
   process.env.BASE_URL ||
   'https://opensource-demo.orangehrmlive.com';
 
+const authFile = 'playwright/.auth/admin.json';
+
 export default defineConfig({
   testDir: '.',
-  testMatch: ['tests/e2e/**/*.spec.ts', 'tests/api/**/*.spec.ts'],
+  testMatch: ['tests/**/*.setup.ts', 'tests/e2e/**/*.spec.ts', 'tests/api/**/*.spec.ts'],
   fullyParallel: true,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 0,
@@ -38,30 +40,44 @@ export default defineConfig({
   },
   projects: [
     // ─────────────────────────────────────────────────────────────
+    // Global Auth Setup: Authenticates Once & Caches StorageState
+    // ─────────────────────────────────────────────────────────────
+    {
+      name: 'setup',
+      testMatch: /.*\.setup\.ts/,
+    },
+
+    // ─────────────────────────────────────────────────────────────
     // Desktop Cross-Browser Matrix: Chromium, Edge, and Safari
     // ─────────────────────────────────────────────────────────────
     {
       name: 'desktop-chrome',
       testDir: 'tests/e2e',
+      dependencies: ['setup'],
       use: {
         ...devices['Desktop Chrome'],
         viewport: { width: 1280, height: 720 },
+        storageState: authFile,
       },
     },
     {
       name: 'desktop-edge',
       testDir: 'tests/e2e',
+      dependencies: ['setup'],
       use: {
         ...devices['Desktop Edge'],
         viewport: { width: 1280, height: 720 },
+        storageState: authFile,
       },
     },
     {
       name: 'desktop-safari',
       testDir: 'tests/e2e',
+      dependencies: ['setup'],
       use: {
         ...devices['Desktop Safari'],
         viewport: { width: 1280, height: 720 },
+        storageState: authFile,
       },
     },
 
@@ -71,20 +87,24 @@ export default defineConfig({
     {
       name: 'tablet',
       testDir: 'tests/e2e',
+      dependencies: ['setup'],
       grep: /@tablet/,
       use: {
         ...devices['iPad (gen 7)'],
         viewport: { width: 810, height: 1080 },
+        storageState: authFile,
       },
     },
     {
       name: 'mobile',
       testDir: 'tests/e2e',
+      dependencies: ['setup'],
       grep: /@mobile/,
       use: {
         ...devices['Pixel 7'],
         viewport: { width: 393, height: 851 },
         isMobile: true,
+        storageState: authFile,
       },
     },
 

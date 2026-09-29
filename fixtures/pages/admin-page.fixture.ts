@@ -8,7 +8,11 @@ type AdminPageFixtures = {
 
 export const test = base.extend<AdminPageFixtures>({
   adminPage: async ({ context, page, request }, use) => {
-    await loginProgrammatic(context, request);
+    const cookies = await context.cookies();
+    const hasAuth = cookies.some((c) => c.name === 'orangehrm');
+    if (!hasAuth) {
+      await loginProgrammatic(context, request);
+    }
     const adminPage = new AdminPage(page, request);
     await adminPage.navigate();
     await use(adminPage);

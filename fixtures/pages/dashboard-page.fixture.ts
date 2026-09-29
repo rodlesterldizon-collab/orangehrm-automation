@@ -8,8 +8,11 @@ type DashboardPageFixtures = {
 
 export const test = base.extend<DashboardPageFixtures>({
   dashboardPage: async ({ context, page, request }, use) => {
-    // Authenticate via fast backend API call (session cookie injected directly into context)
-    await loginProgrammatic(context, request);
+    const cookies = await context.cookies();
+    const hasAuth = cookies.some((c) => c.name === 'orangehrm');
+    if (!hasAuth) {
+      await loginProgrammatic(context, request);
+    }
     const dashboardPage = new DashboardPage(page, request);
     await dashboardPage.navigate();
     await use(dashboardPage);

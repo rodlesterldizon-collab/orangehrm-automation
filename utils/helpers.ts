@@ -1,18 +1,13 @@
 import { BrowserContext, APIRequestContext, Page, expect } from '@playwright/test';
+import fs from 'fs';
+import path from 'path';
 
 /**
  * Safely retrieves administrator credentials from environment variables.
- * Values are loaded from .env.test (or .env override) via dotenv.
  */
 export function getAdminCredentials() {
-  const username = process.env.ADMIN_USERNAME;
-  const password = process.env.ADMIN_PASSWORD;
-
-  if (!username || !password) {
-    throw new Error(
-      'Authentication credentials not found! Please ensure ADMIN_USERNAME and ADMIN_PASSWORD are set in .env.test (copied from .env.example)'
-    );
-  }
+  const username = process.env.ADMIN_USERNAME || 'Admin';
+  const password = process.env.ADMIN_PASSWORD || 'admin123';
 
   return { username, password };
 }
@@ -21,18 +16,12 @@ export function getAdminCredentials() {
  * Retrieves the application base URL from environment variables.
  */
 export function getBaseUrl(): string {
-  const baseUrl = process.env.BASE_URL;
-  if (!baseUrl) {
-    throw new Error(
-      'BASE_URL not configured! Please ensure BASE_URL is set in .env.test'
-    );
-  }
-  return baseUrl;
+  return process.env.BASE_URL || 'https://opensource-demo.orangehrmlive.com';
 }
 
 /**
  * Single source of truth for programmatic session acquisition:
- * 1. Fetches the login page via Playwright's request context (relative URL)
+ * 1. Fetches the login page via Playwright's request context
  * 2. Extracts CSRF token from OrangeHRM Vue component props
  * 3. Submits credentials to /web/index.php/auth/validate
  * 4. Extracts the authenticated 'orangehrm' session cookie
@@ -84,8 +73,7 @@ export async function getAuthCookie(
 
 /**
  * Programmatic login helper for Browser tests:
- * Leverages getAuthCookie() and injects the session cookie directly into BrowserContext
- * to bypass the UI login form and save 3-5 seconds per test.
+ * Injects authenticated cookie into BrowserContext using valid domain and root path.
  */
 export async function loginProgrammatic(
   context: BrowserContext,
@@ -95,19 +83,44 @@ export async function loginProgrammatic(
 ): Promise<string> {
   const authCookieValue = await getAuthCookie(request, username, password);
   const baseUrl = getBaseUrl();
+  const urlObj = new URL(baseUrl);
 
   if (authCookieValue && context) {
     await context.addCookies([
       {
         name: 'orangehrm',
         value: authCookieValue,
-        url: baseUrl,
-        path: '/web',
+        domain: urlObj.hostname,
+        path: '/',
+        httpOnly: true,
+        secure: urlObj.protocol === 'https:',
+        sameSite: 'Lax',
       },
     ]);
   }
 
   return authCookieValue;
+}
+
+/**
+ * Generates and saves storageState JSON for reusable session state across test suites.
+ */
+export async function createAndSaveStorageState(
+  context: BrowserContext,
+  request: APIRequestContext,
+  username?: string,
+  password?: string,
+  storageStatePath: string = 'playwright/.auth/admin.json'
+): Promise<string> {
+  await loginProgrammatic(context, request, username, password);
+
+  const dir = path.dirname(storageStatePath);
+  if (!fs.existsSync(dir)) {
+    fs.mkdirSync(dir, { recursive: true });
+  }
+
+  await context.storageState({ path: storageStatePath });
+  return storageStatePath;
 }
 
 /**

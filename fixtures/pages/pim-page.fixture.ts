@@ -8,7 +8,11 @@ type PimPageFixtures = {
 
 export const test = base.extend<PimPageFixtures>({
   pimPage: async ({ context, page, request }, use) => {
-    await loginProgrammatic(context, request);
+    const cookies = await context.cookies();
+    const hasAuth = cookies.some((c) => c.name === 'orangehrm');
+    if (!hasAuth) {
+      await loginProgrammatic(context, request);
+    }
     const pimPage = new PimPage(page, request);
     await pimPage.navigateToList();
     await use(pimPage);

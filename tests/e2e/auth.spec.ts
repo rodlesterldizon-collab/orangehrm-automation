@@ -1,6 +1,9 @@
 import { test, expect } from '../../fixtures/page-objects.fixture.js';
 import { getAdminCredentials } from '../../utils/helpers.js';
 
+// Reset storageState for UI login flow tests
+test.use({ storageState: { cookies: [], origins: [] } });
+
 test.describe('Authentication & Session Management Suite', () => {
   const creds = getAdminCredentials();
 

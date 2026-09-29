@@ -8,7 +8,11 @@ type DirectoryPageFixtures = {
 
 export const test = base.extend<DirectoryPageFixtures>({
   directoryPage: async ({ context, page, request }, use) => {
-    await loginProgrammatic(context, request);
+    const cookies = await context.cookies();
+    const hasAuth = cookies.some((c) => c.name === 'orangehrm');
+    if (!hasAuth) {
+      await loginProgrammatic(context, request);
+    }
     const directoryPage = new DirectoryPage(page, request);
     await directoryPage.navigate();
     await use(directoryPage);
