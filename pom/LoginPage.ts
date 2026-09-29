@@ -3,8 +3,6 @@ import { BasePage } from './BasePage.js';
 import { getAdminCredentials } from '../utils/helpers.js';
 
 export class LoginPage extends BasePage {
-  readonly root: Locator;
-  readonly form: Locator;
   readonly usernameInput: Locator;
   readonly passwordInput: Locator;
   readonly loginButton: Locator;
@@ -15,15 +13,13 @@ export class LoginPage extends BasePage {
 
   constructor(page: Page, request: APIRequestContext) {
     super(page, request);
-    this.root = this.page.getByRole('main').or(this.page.locator('body')).first();
-    this.form = this.root.locator('form').first();
-    this.usernameInput = this.form.getByPlaceholder('Username');
-    this.passwordInput = this.form.getByPlaceholder('Password');
-    this.loginButton = this.form.getByRole('button', { name: 'Login', exact: true });
-    this.errorAlert = this.page.getByRole('alert');
-    this.errorAlertText = this.errorAlert.locator('p').last();
-    this.requiredErrorLabels = this.form.getByText('Required');
-    this.forgotPasswordLink = this.form.getByText(/Forgot your password\?/i);
+    this.usernameInput = page.getByPlaceholder('Username');
+    this.passwordInput = page.getByPlaceholder('Password');
+    this.loginButton = page.getByRole('button', { name: 'Login' });
+    this.errorAlert = page.locator('.oxd-alert--error');
+    this.errorAlertText = page.locator('.oxd-alert-content-text');
+    this.requiredErrorLabels = page.locator('.oxd-input-field-error-message');
+    this.forgotPasswordLink = page.locator('.orangehrm-login-forgot');
   }
 
   async navigate(): Promise<void> {
@@ -45,3 +41,4 @@ export class LoginPage extends BasePage {
     await this.login(creds.username, creds.password);
   }
 }
+

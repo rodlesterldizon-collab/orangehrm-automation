@@ -2,7 +2,6 @@ import { Page, APIRequestContext, Locator } from '@playwright/test';
 import { BasePage } from './BasePage.js';
 
 export class DashboardPage extends BasePage {
-  readonly root: Locator;
   readonly dashboardHeader: Locator;
   readonly quickLaunchWidget: Locator;
   readonly timeAtWorkWidget: Locator;
@@ -13,14 +12,13 @@ export class DashboardPage extends BasePage {
 
   constructor(page: Page, request: APIRequestContext) {
     super(page, request);
-    this.root = this.page.getByRole('main');
-    this.dashboardHeader = this.page.locator('header').getByText('Dashboard');
-    this.quickLaunchWidget = this.root.locator('div').filter({ has: this.page.getByText('Quick Launch', { exact: true }) }).first();
-    this.timeAtWorkWidget = this.root.locator('div').filter({ has: this.page.getByText('Time at Work', { exact: true }) }).first();
-    this.myActionsWidget = this.root.locator('div').filter({ has: this.page.getByText('My Actions', { exact: true }) }).first();
-    this.assignLeaveButton = this.quickLaunchWidget.getByRole('button', { name: 'Assign Leave' });
-    this.leaveListButton = this.quickLaunchWidget.getByRole('button', { name: 'Leave List' });
-    this.timesheetsButton = this.quickLaunchWidget.getByRole('button', { name: 'Timesheets' });
+    this.dashboardHeader = page.locator('.oxd-topbar-header-breadcrumb').getByText('Dashboard');
+    this.quickLaunchWidget = page.locator('.oxd-sheet').filter({ hasText: 'Quick Launch' });
+    this.timeAtWorkWidget = page.locator('.oxd-sheet').filter({ hasText: 'Time at Work' });
+    this.myActionsWidget = page.locator('.oxd-sheet').filter({ hasText: 'My Actions' });
+    this.assignLeaveButton = page.getByRole('button', { name: 'Assign Leave' });
+    this.leaveListButton = page.getByRole('button', { name: 'Leave List' });
+    this.timesheetsButton = page.getByRole('button', { name: 'Timesheets' });
   }
 
   async navigate(): Promise<void> {

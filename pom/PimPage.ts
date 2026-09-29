@@ -31,7 +31,6 @@ export class PimPage extends BasePage {
 
   constructor(page: Page, request: APIRequestContext) {
     super(page, request);
-
     this.employeeListTab = page.getByRole('link', { name: 'Employee List' });
     this.addEmployeeTab = page.getByRole('link', { name: 'Add Employee' });
     this.reportsTab = page.getByRole('link', { name: 'Reports' });
@@ -40,22 +39,22 @@ export class PimPage extends BasePage {
     this.firstNameInput = page.getByPlaceholder('First Name');
     this.middleNameInput = page.getByPlaceholder('Middle Name');
     this.lastNameInput = page.getByPlaceholder('Last Name');
-    this.employeeIdInput = page.locator('div').filter({ has: page.getByText('Employee Id', { exact: true }) }).locator('input');
-    this.createLoginDetailsToggle = page.locator('input[type="checkbox"], .oxd-switch-input');
-    this.saveEmployeeButton = page.getByRole('button', { name: 'Save', exact: true });
-    this.cancelEmployeeButton = page.getByRole('button', { name: 'Cancel', exact: true });
-    this.employeeDetailsHeader = page.locator('.orangehrm-edit-employee-name, h6').first();
+    this.employeeIdInput = page.locator('.oxd-input-group:has-text("Employee Id") input');
+    this.createLoginDetailsToggle = page.locator('.oxd-switch-input');
+    this.saveEmployeeButton = page.getByRole('button', { name: 'Save' });
+    this.cancelEmployeeButton = page.getByRole('button', { name: 'Cancel' });
+    this.employeeDetailsHeader = page.locator('.orangehrm-edit-employee-name');
 
     // Search and Table locators (SS-03)
-    this.searchNameInput = page.getByPlaceholder('Type for hints...').first();
-    this.searchIdInput = page.locator('div').filter({ has: page.getByText('Employee Id', { exact: true }) }).locator('input');
-    this.searchButton = page.getByRole('button', { name: 'Search', exact: true });
-    this.resetButton = page.getByRole('button', { name: 'Reset', exact: true });
-    this.recordsFoundLabel = page.getByText(/Records? Found|No Records Found/i).first();
-    this.container = page.locator('.orangehrm-container, [role="table"]');
-    this.table = page.locator('.oxd-table, [role="table"]');
-    this.tableRows = page.locator('.oxd-table-card, [role="row"]');
-    this.autocompleteDropdown = page.locator('.oxd-autocomplete-dropdown, [role="listbox"]');
+    this.searchNameInput = page.locator('.oxd-autocomplete-text-input input').first();
+    this.searchIdInput = page.locator('.oxd-input-group:has-text("Employee Id") input');
+    this.searchButton = page.getByRole('button', { name: 'Search' });
+    this.resetButton = page.getByRole('button', { name: 'Reset' });
+    this.recordsFoundLabel = page.locator('span.oxd-text--span, .orangehrm-horizontal-padding span').filter({ hasText: /Records? Found|No Records Found/i }).first();
+    this.container = page.locator('.orangehrm-container');
+    this.table = page.locator('.oxd-table');
+    this.tableRows = page.locator('.oxd-table-card');
+    this.autocompleteDropdown = page.locator('.oxd-autocomplete-dropdown');
   }
 
   async navigateToList(): Promise<void> {
@@ -87,8 +86,8 @@ export class PimPage extends BasePage {
     await this.searchNameInput.fill(name);
     // Wait for autocomplete debouncing
     await this.autocompleteDropdown.waitFor({ state: 'visible', timeout: 5000 }).catch(() => {});
-    const option = this.autocompleteDropdown.locator('.oxd-autocomplete-option, [role="option"]').first();
-    if (await option.isVisible().catch(() => false)) {
+    const option = this.autocompleteDropdown.locator('.oxd-autocomplete-option').first();
+    if (await option.isVisible()) {
       await option.click();
     }
     await this.searchButton.click();

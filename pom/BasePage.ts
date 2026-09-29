@@ -10,15 +10,17 @@ export class BasePage {
   readonly toast: Locator;
   readonly toastMessage: Locator;
   readonly spinner: Locator;
+  readonly loadingSpinner: Locator;
 
   constructor(page: Page, request: APIRequestContext) {
     this.page = page;
     this.request = request;
     this.navbar = new Navbar(page);
     this.sidebar = new Sidebar(page);
-    this.toast = this.page.getByRole('alert');
-    this.toastMessage = this.toast.locator('p').last();
-    this.spinner = this.page.locator('.oxd-loading-spinner');
+    this.toast = page.locator('.oxd-toast');
+    this.toastMessage = page.locator('.oxd-toast-content-text');
+    this.spinner = page.locator('.oxd-loading-spinner');
+    this.loadingSpinner = this.spinner;
   }
 
   async goto(path: string): Promise<void> {
