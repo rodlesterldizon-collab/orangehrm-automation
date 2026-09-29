@@ -148,3 +148,13 @@ export async function waitForSpinner(page: Page, timeout: number = 15000): Promi
   }
   await spinner.waitFor({ state: 'hidden', timeout });
 }
+
+/**
+ * Custom wait helper for OrangeHRM card grid / table updates:
+ * Ensures spinner has hidden and card container (.oxd-grid-4 / .orangehrm-container) is settled.
+ */
+export async function waitForGridUpdate(page: Page, timeout: number = 15000): Promise<void> {
+  await waitForSpinner(page, timeout);
+  const grid = page.locator('.oxd-grid-4, .orangehrm-container').first();
+  await grid.waitFor({ state: 'attached', timeout }).catch(() => null);
+}

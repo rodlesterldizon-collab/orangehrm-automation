@@ -10,6 +10,7 @@ export class DirectoryPage extends BasePage {
   readonly recordsFoundLabel: Locator;
   readonly cardGrid: Locator;
   readonly cardsGrid: Locator;
+  readonly gridContainer: Locator;
   readonly employeeCards: Locator;
   readonly autocompleteDropdown: Locator;
   readonly autocompleteOptions: Locator;
@@ -25,9 +26,10 @@ export class DirectoryPage extends BasePage {
     this.searchButton = page.getByRole('button', { name: 'Search' });
     this.resetButton = page.getByRole('button', { name: 'Reset' });
     this.recordsFoundLabel = page.locator('span.oxd-text--span, .orangehrm-horizontal-padding span').filter({ hasText: /Records? Found|No Records Found/i }).first();
-    this.cardGrid = page.locator('.orangehrm-container');
-    this.cardsGrid = page.locator('.orangehrm-container');
-    this.employeeCards = page.locator('.orangehrm-directory-card, .oxd-sheet');
+    this.cardGrid = page.locator('.oxd-grid-4, .orangehrm-container');
+    this.cardsGrid = page.locator('.oxd-grid-4, .orangehrm-container');
+    this.gridContainer = page.locator('.oxd-grid-4');
+    this.employeeCards = page.locator('.orangehrm-directory-card, .oxd-grid-item .oxd-sheet, .oxd-sheet');
     this.autocompleteDropdown = page.locator('.oxd-autocomplete-dropdown');
     this.autocompleteOptions = page.locator('.oxd-autocomplete-option');
     this.selectDropdown = page.locator('.oxd-select-dropdown');
