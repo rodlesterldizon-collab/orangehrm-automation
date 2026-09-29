@@ -1,15 +1,33 @@
-# Ignore everything in the root workspace/preview app
-/*
-!/orangehrm-automation/
-!/.gitignore
-
-# Ignore root environment templates
-/.env*
-
-# Global ignores
+# Dependencies
 node_modules/
+
+# Build & Vite artifacts
 dist/
 build/
 coverage/
+
+# Platform & Web preview artifacts
+.aistudio/
+src/
+index.html
+vite.config.ts
+metadata.json
+bun.lock
+
+# Playwright Test Reports & Execution Traces
+test-results/
+playwright-report/
+blob-report/
+playwright/.cache/
+playwright/.auth/
+
+# Secrets & Local Overrides (.env and .env.test ignored; .env.example tracked as safe template)
+.env
+.env.*
+.env.test
+!.env.example
+
+# OS & Logs
 .DS_Store
+Thumbs.db
 *.log
