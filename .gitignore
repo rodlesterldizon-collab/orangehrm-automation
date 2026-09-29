@@ -1,19 +1,6 @@
 # Dependencies
 node_modules/
 
-# Build & Vite artifacts
-dist/
-build/
-coverage/
-
-# Platform & Web preview artifacts
-.aistudio/
-src/
-index.html
-vite.config.ts
-metadata.json
-bun.lock
-
 # Playwright Test Reports & Execution Traces
 test-results/
 playwright-report/
@@ -31,3 +18,28 @@ playwright/.auth/
 .DS_Store
 Thumbs.db
 *.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# IDE & Editor configs
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Build & Coverage artifacts
+dist/
+build/
+coverage/
+
+# AI Studio & Temporary Scaffolding
+.aistudio/
+metadata.json
+server.mjs
+src/
+bun.lock
+
+
+
