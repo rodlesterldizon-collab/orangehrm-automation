@@ -1,4 +1,5 @@
 import { test, expect } from '../../fixtures/page-objects.fixture.js';
+import { waitForSpinner } from '../../utils/helpers.js';
 
 test.describe('Directory Search & Navigation Suite', () => {
   test('[TC-UI-21] @smoke — Directory Card Grid Initial Render', async ({ directoryPage }) => {
@@ -8,33 +9,39 @@ test.describe('Directory Search & Navigation Suite', () => {
     await expect(directoryPage.employeeCards.first()).toBeVisible();
   });
 
-  test('[TC-UI-22] @sanity — Search Directory by Name Autocomplete', async ({ directoryPage }) => {
+  test('[TC-UI-22] @sanity — Search Directory by Name Autocomplete', async ({ directoryPage, page }) => {
     // 1. Type hint and search
     await directoryPage.searchByName('a');
+    await waitForSpinner(page);
 
     // 2. Assert card grid displays at least one filtered profile card
     await expect(directoryPage.employeeCards.first()).toBeVisible();
   });
 
-  test('[TC-UI-23] @regression — Filter Directory by Job Title', async ({ directoryPage }) => {
+  test('[TC-UI-23] @regression — Filter Directory by Job Title', async ({ directoryPage, page }) => {
     // 1. Select specific job title "Chief Financial Officer"
     const selectedTitle = await directoryPage.filterByJobTitle('Chief Financial Officer');
 
-    // 2. Assert filtered card contains the expected title
+    // 2. Custom wait for loading spinner (.oxd-loading-spinner) to appear and disappear
+    await waitForSpinner(page);
+
+    // 3. Assert filtered card contains the expected title
     await expect(directoryPage.employeeCards.first()).toBeVisible({ timeout: 10000 });
     await expect(directoryPage.employeeCards.first()).toContainText(selectedTitle || 'Chief Financial Officer');
   });
 
-  test('[TC-UI-24] @regression — Reset Filter Restores Full Count', async ({ directoryPage }) => {
+  test('[TC-UI-24] @regression — Reset Filter Restores Full Count', async ({ directoryPage, page }) => {
     // 1. Ensure initial directory grid is loaded with records
     await expect(directoryPage.recordsFoundLabel).toHaveText(/.*Records? Found/i, { timeout: 10000 });
 
     // 2. Filter down by Job Title
     await directoryPage.filterByJobTitle('Chief Financial Officer');
+    await waitForSpinner(page);
     await expect(directoryPage.employeeCards.first()).toBeVisible({ timeout: 10000 });
 
     // 3. Reset filters
     await directoryPage.reset();
+    await waitForSpinner(page);
 
     // 4. Assert restored to full count with wildcard regex for dynamic numbers and leading spaces
     await expect(directoryPage.recordsFoundLabel).toHaveText(/.*Records? Found/i, { timeout: 10000 });
@@ -44,7 +51,10 @@ test.describe('Directory Search & Navigation Suite', () => {
     // 1. Apply combination filters
     await directoryPage.filterByJobTitleAndLocation('HR Manager', 'Canadian Regional HQ');
 
-    // 2. Assert "No Records Found" is displayed and 0 cards rendered
+    // 2. Custom wait for loading spinner (.oxd-loading-spinner) to appear and disappear
+    await waitForSpinner(page);
+
+    // 3. Assert "No Records Found" is displayed and 0 cards rendered
     const noRecordsIndicator = page.locator('span.oxd-text--span, .orangehrm-horizontal-padding span, p').filter({ hasText: /No Records Found/i }).first();
     await expect(noRecordsIndicator).toBeVisible({ timeout: 10000 });
     await expect(noRecordsIndicator).toContainText('No Records Found');

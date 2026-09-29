@@ -133,3 +133,18 @@ export async function waitForToast(page: Page, expectedText?: string): Promise<v
     await expect(toast).toContainText(expectedText);
   }
 }
+
+/**
+ * Custom wait helper for OrangeHRM loading spinner (.oxd-loading-spinner):
+ * Waits for the spinner to appear upon triggering an action (e.g. search)
+ * and then waits for it to completely disappear/detach from the DOM.
+ */
+export async function waitForSpinner(page: Page, timeout: number = 15000): Promise<void> {
+  const spinner = page.locator('.oxd-loading-spinner');
+  try {
+    await spinner.waitFor({ state: 'visible', timeout: 2500 });
+  } catch {
+    // Spinner may have been instantaneous
+  }
+  await spinner.waitFor({ state: 'hidden', timeout });
+}

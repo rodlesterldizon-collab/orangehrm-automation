@@ -9,6 +9,7 @@ export class BasePage {
   readonly sidebar: Sidebar;
   readonly toast: Locator;
   readonly toastMessage: Locator;
+  readonly loadingSpinner: Locator;
 
   constructor(page: Page, request: APIRequestContext) {
     this.page = page;
@@ -17,6 +18,7 @@ export class BasePage {
     this.sidebar = new Sidebar(page);
     this.toast = page.locator('.oxd-toast');
     this.toastMessage = page.locator('.oxd-toast-content-text');
+    this.loadingSpinner = page.locator('.oxd-loading-spinner');
   }
 
   async goto(path: string): Promise<void> {
@@ -30,5 +32,14 @@ export class BasePage {
   async getToastText(): Promise<string> {
     await this.waitForToast();
     return (await this.toastMessage.textContent()) || '';
+  }
+
+  async waitForSpinner(timeout: number = 15000): Promise<void> {
+    try {
+      await this.loadingSpinner.waitFor({ state: 'visible', timeout: 2500 });
+    } catch {
+      // Spinner may have completed instantaneously
+    }
+    await this.loadingSpinner.waitFor({ state: 'hidden', timeout });
   }
 }
