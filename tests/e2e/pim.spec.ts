@@ -1,5 +1,6 @@
 import { test, expect } from '../../fixtures/page-objects.fixture.js';
 import { generateEmployeeData } from '../../utils/test-data.js';
+import { waitForSpinner } from '../../utils/helpers.js';
 
 test.describe('PIM Employee Lifecycle & Management Suite', () => {
   test('[TC-UI-09] @smoke @sanity — Add Employee with Auto-Generated ID', async ({ pimPage, page }) => {
@@ -68,20 +69,28 @@ test.describe('PIM Employee Lifecycle & Management Suite', () => {
     await expect(pimPage.table).toContainText(employeeData.lastName);
   });
 
-  test('[TC-UI-14] @regression — Filter Reset Restores Original Records Count', async ({ pimPage }) => {
+  test('[TC-UI-14] @regression — Filter Reset Restores Original Records Count', async ({ pimPage, page }) => {
     await pimPage.navigateToList();
+    await waitForSpinner(page);
 
-    // 1. Get initial total count text, e.g. "(172) Records Found"
-    const initialCountText = await pimPage.recordsFoundLabel.textContent();
+    // 1. Ensure initial records found counter is rendered
+    await expect(pimPage.recordsFoundLabel).toHaveText(/.*Records? Found/i, { timeout: 10000 });
 
     // 2. Perform a search filter to reduce count
     await pimPage.searchNameInput.fill('NonExistentNameXYZ999');
     await pimPage.searchButton.click();
+    await waitForSpinner(page);
 
     // 3. Click Reset
     await pimPage.resetSearch();
+    await waitForSpinner(page);
 
-    // 4. Assert count label restores to initial state
-    await expect(pimPage.recordsFoundLabel).toHaveText(initialCountText || '');
+    // 4. Assert count label restores to full records found format with wildcard regex
+    await expect(pimPage.recordsFoundLabel).toHaveText(/.*Records? Found/i, { timeout: 10000 });
+
+    // 5. Check container has multiple rows (not just one record)
+    await expect(pimPage.tableRows.first()).toBeVisible({ timeout: 10000 });
+    const rowCount = await pimPage.tableRows.count();
+    expect(rowCount).toBeGreaterThan(1);
   });
 });

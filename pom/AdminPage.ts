@@ -3,6 +3,10 @@ import { BasePage } from './BasePage.js';
 import { UserTestData } from '../utils/test-data.js';
 
 export class AdminPage extends BasePage {
+  readonly root: Locator;
+  readonly filterForm: Locator;
+  readonly addUserForm: Locator;
+
   // System Users List view (SS-02)
   readonly addUserButton: Locator;
   readonly searchUsernameInput: Locator;
@@ -29,34 +33,86 @@ export class AdminPage extends BasePage {
 
   constructor(page: Page, request: APIRequestContext) {
     super(page, request);
+    this.root = this.page.getByRole('main');
+    this.filterForm = this.root.locator('form').first();
+    this.addUserForm = this.root.locator('form').last();
+
     // Search form & list
-    this.addUserButton = page.getByRole('button', { name: 'Add' });
-    this.searchUsernameInput = page.locator('.oxd-input-group:has-text("Username") input');
-    this.searchUserRoleDropdown = page.locator('.oxd-input-group:has-text("User Role") .oxd-select-text');
-    this.searchEmployeeNameInput = page.locator('.oxd-autocomplete-text-input input');
-    this.searchStatusDropdown = page.locator('.oxd-input-group:has-text("Status") .oxd-select-text');
-    this.searchButton = page.getByRole('button', { name: 'Search' });
-    this.resetButton = page.getByRole('button', { name: 'Reset' });
-    this.recordsFoundLabel = page.locator('.orangehrm-horizontal-padding span').first();
-    this.table = page.locator('.oxd-table');
-    this.tableRows = page.locator('.oxd-table-card');
+    this.addUserButton = this.root.getByRole('button', { name: 'Add', exact: true });
+    this.searchUsernameInput = this.filterForm.locator('div').filter({ has: this.page.getByText('Username', { exact: true }) }).locator('input');
+    this.searchUserRoleDropdown = this.filterForm
+      .locator('div')
+      .filter({ has: this.page.getByText('User Role', { exact: true }) })
+      .locator('[role="combobox"]')
+      .or(
+        this.filterForm
+          .locator('div')
+          .filter({ has: this.page.getByText('User Role', { exact: true }) })
+          .locator('i')
+          .locator('..')
+      )
+      .first();
+
+    this.searchEmployeeNameInput = this.filterForm.getByPlaceholder('Type for hints...');
+    this.searchStatusDropdown = this.filterForm
+      .locator('div')
+      .filter({ has: this.page.getByText('Status', { exact: true }) })
+      .locator('[role="combobox"]')
+      .or(
+        this.filterForm
+          .locator('div')
+          .filter({ has: this.page.getByText('Status', { exact: true }) })
+          .locator('i')
+          .locator('..')
+      )
+      .first();
+
+    this.searchButton = this.filterForm.getByRole('button', { name: 'Search', exact: true });
+    this.resetButton = this.filterForm.getByRole('button', { name: 'Reset', exact: true });
+    this.recordsFoundLabel = this.root.getByText(/Records? Found|No Records Found/i).first();
+    this.table = this.root.locator('[role="table"]').or(this.root.locator('table'));
+    this.tableRows = this.root.getByRole('row').or(this.root.locator('.oxd-table-card'));
 
     // Add User Form
-    this.userRoleSelect = page.locator('.oxd-input-group:has-text("User Role") .oxd-select-text');
-    this.employeeNameAutocomplete = page.locator('.oxd-autocomplete-text-input input');
-    this.statusSelect = page.locator('.oxd-input-group:has-text("Status") .oxd-select-text');
-    this.usernameInput = page.locator('.oxd-input-group:has-text("Username") input');
-    this.passwordInput = page.locator('.oxd-input-group:has-text("Password") input[type="password"]').first();
-    this.confirmPasswordInput = page.locator('.oxd-input-group:has-text("Confirm Password") input[type="password"]');
-    this.saveUserButton = page.getByRole('button', { name: 'Save' });
-    this.cancelUserButton = page.getByRole('button', { name: 'Cancel' });
-    this.alreadyExistsError = page.locator('.oxd-input-field-error-message:has-text("Already exists")');
-    this.autocompleteDropdown = page.locator('.oxd-autocomplete-dropdown');
+    this.userRoleSelect = this.addUserForm
+      .locator('div')
+      .filter({ has: this.page.getByText('User Role', { exact: true }) })
+      .locator('[role="combobox"]')
+      .or(
+        this.addUserForm
+          .locator('div')
+          .filter({ has: this.page.getByText('User Role', { exact: true }) })
+          .locator('i')
+          .locator('..')
+      )
+      .first();
+
+    this.employeeNameAutocomplete = this.addUserForm.getByPlaceholder('Type for hints...');
+    this.statusSelect = this.addUserForm
+      .locator('div')
+      .filter({ has: this.page.getByText('Status', { exact: true }) })
+      .locator('[role="combobox"]')
+      .or(
+        this.addUserForm
+          .locator('div')
+          .filter({ has: this.page.getByText('Status', { exact: true }) })
+          .locator('i')
+          .locator('..')
+      )
+      .first();
+
+    this.usernameInput = this.addUserForm.locator('div').filter({ has: this.page.getByText('Username', { exact: true }) }).locator('input');
+    this.passwordInput = this.addUserForm.locator('input[type="password"]').first();
+    this.confirmPasswordInput = this.addUserForm.locator('input[type="password"]').last();
+    this.saveUserButton = this.addUserForm.getByRole('button', { name: 'Save', exact: true });
+    this.cancelUserButton = this.addUserForm.getByRole('button', { name: 'Cancel', exact: true });
+    this.alreadyExistsError = this.addUserForm.getByText('Already exists');
+    this.autocompleteDropdown = this.page.getByRole('listbox');
   }
 
   async navigate(): Promise<void> {
     await this.goto('/web/index.php/admin/viewSystemUsers');
-    await this.table.waitFor({ state: 'visible', timeout: 10000 }).catch(() => null);
+    await this.recordsFoundLabel.waitFor({ state: 'visible', timeout: 10000 }).catch(() => null);
   }
 
   async filterByRole(role: 'Admin' | 'ESS'): Promise<void> {
@@ -84,7 +140,7 @@ export class AdminPage extends BasePage {
     // Type Employee Name autocomplete and select genuine non-loading option
     await this.employeeNameAutocomplete.fill(employeeHint);
     await this.autocompleteDropdown.waitFor({ state: 'visible', timeout: 6000 });
-    const validOption = this.autocompleteDropdown.locator('.oxd-autocomplete-option:not(:has-text("Searching"))').first();
+    const validOption = this.autocompleteDropdown.getByRole('option').filter({ hasNotText: 'Searching' }).first();
     await validOption.waitFor({ state: 'visible', timeout: 8000 });
     await validOption.click();
 

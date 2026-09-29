@@ -3,6 +3,10 @@ import { BasePage } from './BasePage.js';
 import { EmployeeTestData } from '../utils/test-data.js';
 
 export class PimPage extends BasePage {
+  readonly root: Locator;
+  readonly filterForm: Locator;
+  readonly addEmployeeForm: Locator;
+
   // Navigation tabs
   readonly employeeListTab: Locator;
   readonly addEmployeeTab: Locator;
@@ -24,35 +28,41 @@ export class PimPage extends BasePage {
   readonly searchButton: Locator;
   readonly resetButton: Locator;
   readonly recordsFoundLabel: Locator;
+  readonly container: Locator;
   readonly table: Locator;
   readonly tableRows: Locator;
   readonly autocompleteDropdown: Locator;
 
   constructor(page: Page, request: APIRequestContext) {
     super(page, request);
-    this.employeeListTab = page.getByRole('link', { name: 'Employee List' });
-    this.addEmployeeTab = page.getByRole('link', { name: 'Add Employee' });
-    this.reportsTab = page.getByRole('link', { name: 'Reports' });
+    this.root = this.page.getByRole('main');
+    this.filterForm = this.root.locator('form').first();
+    this.addEmployeeForm = this.root.locator('form').last();
+
+    this.employeeListTab = this.page.getByRole('link', { name: 'Employee List' });
+    this.addEmployeeTab = this.page.getByRole('link', { name: 'Add Employee' });
+    this.reportsTab = this.page.getByRole('link', { name: 'Reports' });
 
     // Add Employee Form locators (SS-04)
-    this.firstNameInput = page.getByPlaceholder('First Name');
-    this.middleNameInput = page.getByPlaceholder('Middle Name');
-    this.lastNameInput = page.getByPlaceholder('Last Name');
-    this.employeeIdInput = page.locator('.oxd-input-group:has-text("Employee Id") input');
-    this.createLoginDetailsToggle = page.locator('.oxd-switch-input');
-    this.saveEmployeeButton = page.getByRole('button', { name: 'Save' });
-    this.cancelEmployeeButton = page.getByRole('button', { name: 'Cancel' });
-    this.employeeDetailsHeader = page.locator('.orangehrm-edit-employee-name');
+    this.firstNameInput = this.addEmployeeForm.getByPlaceholder('First Name');
+    this.middleNameInput = this.addEmployeeForm.getByPlaceholder('Middle Name');
+    this.lastNameInput = this.addEmployeeForm.getByPlaceholder('Last Name');
+    this.employeeIdInput = this.addEmployeeForm.locator('div').filter({ has: this.page.getByText('Employee Id', { exact: true }) }).locator('input');
+    this.createLoginDetailsToggle = this.addEmployeeForm.locator('input[type="checkbox"], .oxd-switch-input');
+    this.saveEmployeeButton = this.addEmployeeForm.getByRole('button', { name: 'Save', exact: true });
+    this.cancelEmployeeButton = this.addEmployeeForm.getByRole('button', { name: 'Cancel', exact: true });
+    this.employeeDetailsHeader = this.root.locator('h6').first();
 
     // Search and Table locators (SS-03)
-    this.searchNameInput = page.locator('.oxd-autocomplete-text-input input').first();
-    this.searchIdInput = page.locator('.oxd-input-group:has-text("Employee Id") input');
-    this.searchButton = page.getByRole('button', { name: 'Search' });
-    this.resetButton = page.getByRole('button', { name: 'Reset' });
-    this.recordsFoundLabel = page.locator('.orangehrm-horizontal-padding span').first();
-    this.table = page.locator('.oxd-table');
-    this.tableRows = page.locator('.oxd-table-card');
-    this.autocompleteDropdown = page.locator('.oxd-autocomplete-dropdown');
+    this.searchNameInput = this.filterForm.getByPlaceholder('Type for hints...').first();
+    this.searchIdInput = this.filterForm.locator('div').filter({ has: this.page.getByText('Employee Id', { exact: true }) }).locator('input');
+    this.searchButton = this.filterForm.getByRole('button', { name: 'Search', exact: true });
+    this.resetButton = this.filterForm.getByRole('button', { name: 'Reset', exact: true });
+    this.recordsFoundLabel = this.root.getByText(/Records? Found|No Records Found/i).first();
+    this.container = this.root.locator('.orangehrm-container, [role="table"]');
+    this.table = this.root.locator('.oxd-table, [role="table"]');
+    this.tableRows = this.table.locator('.oxd-table-card, [role="row"]');
+    this.autocompleteDropdown = this.page.locator('[role="listbox"], .oxd-autocomplete-dropdown');
   }
 
   async navigateToList(): Promise<void> {
@@ -84,8 +94,8 @@ export class PimPage extends BasePage {
     await this.searchNameInput.fill(name);
     // Wait for autocomplete debouncing
     await this.autocompleteDropdown.waitFor({ state: 'visible', timeout: 5000 }).catch(() => {});
-    const option = this.autocompleteDropdown.locator('.oxd-autocomplete-option').first();
-    if (await option.isVisible()) {
+    const option = this.autocompleteDropdown.locator('.oxd-autocomplete-option, [role="option"]').first();
+    if (await option.isVisible().catch(() => false)) {
       await option.click();
     }
     await this.searchButton.click();

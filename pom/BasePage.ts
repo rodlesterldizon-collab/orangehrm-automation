@@ -5,20 +5,22 @@ import { Sidebar } from './components/Sidebar.js';
 export class BasePage {
   readonly page: Page;
   readonly request: APIRequestContext;
+  readonly root: Locator;
   readonly navbar: Navbar;
   readonly sidebar: Sidebar;
   readonly toast: Locator;
   readonly toastMessage: Locator;
-  readonly loadingSpinner: Locator;
+  readonly spinner: Locator;
 
   constructor(page: Page, request: APIRequestContext) {
     this.page = page;
     this.request = request;
+    this.root = this.page.getByRole('main');
     this.navbar = new Navbar(page);
     this.sidebar = new Sidebar(page);
-    this.toast = page.locator('.oxd-toast');
-    this.toastMessage = page.locator('.oxd-toast-content-text');
-    this.loadingSpinner = page.locator('.oxd-loading-spinner');
+    this.toast = this.page.getByRole('alert');
+    this.toastMessage = this.toast.locator('p').last();
+    this.spinner = this.page.locator('.oxd-loading-spinner');
   }
 
   async goto(path: string): Promise<void> {
@@ -36,10 +38,10 @@ export class BasePage {
 
   async waitForSpinner(timeout: number = 15000): Promise<void> {
     try {
-      await this.loadingSpinner.waitFor({ state: 'visible', timeout: 2500 });
+      await this.spinner.waitFor({ state: 'visible', timeout: 2500 });
     } catch {
       // Spinner may have completed instantaneously
     }
-    await this.loadingSpinner.waitFor({ state: 'hidden', timeout });
+    await this.spinner.waitFor({ state: 'hidden', timeout });
   }
 }

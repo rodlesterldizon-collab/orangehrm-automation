@@ -26,7 +26,7 @@ test.describe('Responsive Viewport & Mobile Navigation Suite', () => {
       await expect(dashboardPage.sidebar.getMenuItem('PIM')).toBeVisible();
       await expect(dashboardPage.sidebar.getMenuItem('Directory')).toBeVisible();
 
-      // Click hamburger again to collapse drawer or navigate
+      // Click menu item to navigate
       await dashboardPage.sidebar.navigateTo('PIM');
       await expect(page).toHaveURL(/.*\/pim\/viewEmployeeList/);
     } else {
@@ -71,7 +71,7 @@ test.describe('Responsive Viewport & Mobile Navigation Suite', () => {
     await expect(directoryPage.resetButton).toBeVisible();
 
     // 3. Verify cards grid or container is visible
-    await expect(directoryPage.cardsGrid).toBeVisible();
+    await expect(directoryPage.cardsGrid.first()).toBeVisible();
 
     // 4. Ensure no horizontal page clipping on mobile/tablet
     const hasHorizontalOverflow = await page.evaluate(() => {
