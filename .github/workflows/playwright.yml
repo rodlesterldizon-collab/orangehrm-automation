@@ -64,10 +64,10 @@ jobs:
           retention-days: 14
 
   # ─────────────────────────────────────────────────────────────────
-  # Job 2: Desktop Cross-Browser Matrix (Chromium, Edge, Safari)
+  # Job 2: Desktop E2E (Chrome)
   # ─────────────────────────────────────────────────────────────────
   desktop-e2e:
-    name: "Desktop Cross-Browser E2E (Chrome, Edge, Safari)"
+    name: "Desktop E2E (Chrome)"
     runs-on: ubuntu-latest
     container:
       image: ghcr.io/rodlesterldizon-collab/core-test-suite/test-runner:v1.62.1
@@ -95,18 +95,18 @@ jobs:
           if [ -n "$SECRET_PASSWORD" ]; then echo "ADMIN_PASSWORD=$SECRET_PASSWORD" >> .env; fi
           echo "CI=true" >> .env
 
-      - name: Run Desktop Cross-Browser E2E Tests
+      - name: Run Desktop E2E Tests (Chrome)
         run: npm run test:desktop
 
       - name: Publish Desktop Test Run Summary
         if: always()
         run: |
-          echo "### 🖥️ Desktop Cross-Browser E2E Regression Run" >> $GITHUB_STEP_SUMMARY
+          echo "### 🖥️ Desktop E2E Regression Run" >> $GITHUB_STEP_SUMMARY
           echo "| Parameter | Value |" >> $GITHUB_STEP_SUMMARY
           echo "| :--- | :--- |" >> $GITHUB_STEP_SUMMARY
           echo "| **Container Image** | \`ghcr.io/rodlesterldizon-collab/core-test-suite/test-runner:v1.62.1\` |" >> $GITHUB_STEP_SUMMARY
           echo "| **Status** | ${{ job.status }} |" >> $GITHUB_STEP_SUMMARY
-          echo "| **Browsers Tested** | Google Chrome (Chromium), Microsoft Edge (msedge), Apple Safari (WebKit) |" >> $GITHUB_STEP_SUMMARY
+          echo "| **Browser Tested** | Google Chrome / Chromium |" >> $GITHUB_STEP_SUMMARY
           echo "| **Resolution** | 1280x720 (Desktop Viewport) |" >> $GITHUB_STEP_SUMMARY
           echo "| **Artifact** | Download \`playwright-report-desktop\` for traces and videos |" >> $GITHUB_STEP_SUMMARY
 
