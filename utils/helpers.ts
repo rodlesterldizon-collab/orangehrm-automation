@@ -140,7 +140,7 @@ export async function waitForToast(page: Page, expectedText?: string): Promise<v
  * and then waits for it to completely disappear/detach from the DOM.
  */
 export async function waitForSpinner(page: Page, timeout: number = 15000): Promise<void> {
-  const spinner = page.locator('.oxd-loading-spinner');
+  const spinner = page.locator('div[class*="loading-spinner"]').last();
   try {
     await spinner.waitFor({ state: 'visible', timeout: 2500 });
   } catch {

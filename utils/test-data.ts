@@ -54,7 +54,8 @@ export function generateUserData(role: 'Admin' | 'ESS' = 'Admin'): UserTestData 
   const baseName = faker.person.firstName().toLowerCase().replace(/[^a-z0-9]/g, '');
   const suffix = faker.number.int({ min: 1000, max: 9999 });
   const username = `usr_${baseName}_${suffix}`;
-  const password = `P@ss${faker.string.alphanumeric({ length: 6, casing: 'mixed' })}!`;
+  const password = `P@ss${faker.string.alphanumeric({ length: 6, casing: 'mixed' })}${faker.string.numeric(1)}!`;
+
 
   return {
     username,

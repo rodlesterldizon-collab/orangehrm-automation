@@ -14,6 +14,7 @@ export class AdminPage extends BasePage {
   readonly recordsFoundLabel: Locator;
   readonly table: Locator;
   readonly tableRows: Locator;
+  readonly userRoleCells: Locator;
 
   // Add User Form locators
   readonly userRoleSelect: Locator;
@@ -40,6 +41,7 @@ export class AdminPage extends BasePage {
     this.recordsFoundLabel = page.locator('.orangehrm-horizontal-padding span').first();
     this.table = page.locator('.oxd-table');
     this.tableRows = page.locator('.oxd-table-card');
+    this.userRoleCells = this.tableRows.locator('.oxd-table-cell:nth-child(3)');
 
     // Add User Form
     this.userRoleSelect = page.locator('.oxd-input-group:has-text("User Role") .oxd-select-text');

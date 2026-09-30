@@ -11,9 +11,9 @@ test.describe('Directory Search & Navigation Suite', () => {
 
   test('[TC-UI-22] @sanity — Search Directory by Name Autocomplete', async ({ directoryPage, page }) => {
     // 1. Type hint into search input
-    await directoryPage.searchNameInput.fill('a');
-    await directoryPage.autocompleteDropdown.waitFor({ state: 'visible', timeout: 5000 }).catch(() => {});
-    
+    await directoryPage.searchEmployeeInput.fill('a');
+    await directoryPage.autocompleteDropdown.waitFor({ state: 'visible', timeout: 5000 }).catch(() => { });
+
     // 2. Select first available option from dropdown
     const option = directoryPage.autocompleteOptions.filter({ hasNotText: 'Searching' }).first();
     if (await option.isVisible().catch(() => false)) {

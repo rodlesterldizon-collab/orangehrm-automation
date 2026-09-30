@@ -2,6 +2,7 @@ import { Page, Locator } from '@playwright/test';
 
 export class Navbar {
   readonly page: Page;
+  readonly root: Locator;
   readonly container: Locator;
   readonly breadcrumbHeader: Locator;
   readonly userDropdown: Locator;
@@ -15,16 +16,17 @@ export class Navbar {
 
   constructor(page: Page) {
     this.page = page;
-    this.container = page.locator('.oxd-topbar');
-    this.breadcrumbHeader = page.locator('.oxd-topbar-header-breadcrumb');
-    this.hamburgerButton = page.locator('.oxd-topbar-header-hamburger, i.bi-list, button:has(.bi-list)');
-    this.userDropdown = page.locator('.oxd-userdropdown');
-    this.userDropdownName = page.locator('.oxd-userdropdown-name');
-    this.userDropdownMenu = page.locator('.oxd-userdropdown-tab');
-    this.logoutLink = page.getByRole('menuitem', { name: 'Logout' });
-    this.aboutLink = page.getByRole('menuitem', { name: 'About' });
-    this.supportLink = page.getByRole('menuitem', { name: 'Support' });
-    this.changePasswordLink = page.getByRole('menuitem', { name: 'Change Password' });
+    this.root = this.page.getByRole('banner').or(this.page.locator('header')).first();
+    this.container = this.root;
+    this.breadcrumbHeader = this.root.locator('h6').first();
+    this.hamburgerButton = this.root.getByRole('button').filter({ has: this.page.locator('i') }).first();
+    this.userDropdown = this.root.getByRole('listitem').last();
+    this.userDropdownName = this.userDropdown.locator('p, span').first();
+    this.userDropdownMenu = this.userDropdown.getByRole('menu');
+    this.logoutLink = this.page.getByRole('menuitem', { name: 'Logout' });
+    this.aboutLink = this.page.getByRole('menuitem', { name: 'About' });
+    this.supportLink = this.page.getByRole('menuitem', { name: 'Support' });
+    this.changePasswordLink = this.page.getByRole('menuitem', { name: 'Change Password' });
   }
 
   async toggleHamburger(): Promise<void> {

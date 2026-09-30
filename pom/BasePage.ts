@@ -17,9 +17,9 @@ export class BasePage {
     this.request = request;
     this.navbar = new Navbar(page);
     this.sidebar = new Sidebar(page);
-    this.toast = page.locator('.oxd-toast');
-    this.toastMessage = page.locator('.oxd-toast-content-text');
-    this.spinner = page.locator('.oxd-loading-spinner');
+    this.toast = page.locator('#oxd-toaster_1');
+    this.toastMessage = this.toast.locator('p').first();
+    this.spinner = page.locator('div[class*="loading-spinner"]').last();
     this.loadingSpinner = this.spinner;
   }
 
