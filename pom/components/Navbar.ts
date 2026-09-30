@@ -28,17 +28,4 @@ export class Navbar {
     this.supportLink = this.page.getByRole('menuitem', { name: 'Support' });
     this.changePasswordLink = this.page.getByRole('menuitem', { name: 'Change Password' });
   }
-
-  async toggleHamburger(): Promise<void> {
-    await this.hamburgerButton.click();
-  }
-
-  async openUserDropdown(): Promise<void> {
-    await this.userDropdown.click();
-  }
-
-  async logout(): Promise<void> {
-    await this.openUserDropdown();
-    await this.logoutLink.click();
-  }
 }

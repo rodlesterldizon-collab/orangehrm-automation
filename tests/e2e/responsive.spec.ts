@@ -18,7 +18,7 @@ test.describe('Responsive Viewport & Mobile Navigation Suite', () => {
       await expect(hamburger).toBeEnabled();
 
       // Click hamburger to open sidebar drawer
-      await dashboardPage.navbar.toggleHamburger();
+      await dashboardPage.navbar.hamburgerButton.click();
       await expect(dashboardPage.sidebar.container).toBeVisible();
 
       // Verify key menu items are rendered inside drawer
@@ -54,7 +54,7 @@ test.describe('Responsive Viewport & Mobile Navigation Suite', () => {
 
     // 3. User profile menu is accessible across viewports
     await expect(dashboardPage.navbar.userDropdown).toBeVisible();
-    await dashboardPage.navbar.openUserDropdown();
+    await dashboardPage.navbar.userDropdown.click();
     await expect(dashboardPage.navbar.logoutLink).toBeVisible();
   });
 

@@ -40,7 +40,7 @@ export class PimPage extends BasePage {
     this.firstNameInput = page.getByPlaceholder('First Name');
     this.middleNameInput = page.getByPlaceholder('Middle Name');
     this.lastNameInput = page.getByPlaceholder('Last Name');
-    this.employeeIdInput = page.locator('div').filter({ has: page.getByText('Employee Id', { exact: true }) }).locator('input');
+    this.employeeIdInput = page.locator('div').filter({ has: page.getByText('Employee Id', { exact: true }) }).locator('div > input').last();
     this.createLoginDetailsToggle = page.locator('input[type="checkbox"], .oxd-switch-input');
     this.saveEmployeeButton = page.getByRole('button', { name: 'Save', exact: true });
     this.cancelEmployeeButton = page.getByRole('button', { name: 'Cancel', exact: true });
@@ -64,42 +64,5 @@ export class PimPage extends BasePage {
 
   async navigateToAdd(): Promise<void> {
     await this.goto('/web/index.php/pim/addEmployee');
-  }
-
-  async fillAddEmployeeForm(data: EmployeeTestData, customId = false): Promise<void> {
-    await this.firstNameInput.fill(data.firstName);
-    if (data.middleName) {
-      await this.middleNameInput.fill(data.middleName);
-    }
-    await this.lastNameInput.fill(data.lastName);
-    if (customId && data.employeeId) {
-      await this.employeeIdInput.click();
-      await this.employeeIdInput.fill('');
-      await this.employeeIdInput.fill(data.employeeId);
-    }
-  }
-
-  async saveEmployee(): Promise<void> {
-    await this.saveEmployeeButton.click();
-  }
-
-  async searchByName(name: string): Promise<void> {
-    await this.searchNameInput.fill(name);
-    // Wait for autocomplete debouncing
-    await this.autocompleteDropdown.waitFor({ state: 'visible', timeout: 5000 }).catch(() => {});
-    const option = this.autocompleteDropdown.locator('.oxd-autocomplete-option, [role="option"]').first();
-    if (await option.isVisible().catch(() => false)) {
-      await option.click();
-    }
-    await this.searchButton.click();
-  }
-
-  async searchById(id: string): Promise<void> {
-    await this.searchIdInput.fill(id);
-    await this.searchButton.click();
-  }
-
-  async resetSearch(): Promise<void> {
-    await this.resetButton.click();
   }
 }

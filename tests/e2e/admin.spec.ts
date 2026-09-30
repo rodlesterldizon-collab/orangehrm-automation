@@ -13,23 +13,48 @@ test.describe('Admin User Role & Provisioning Suite', () => {
     await expect(adminPage.recordsFoundLabel).toBeVisible();
   });
 
-  test('[TC-UI-16] @sanity — Create New System User (Admin Role)', async ({ adminPage }) => {
+  test('[TC-UI-16] @sanity — Create New System User (Admin Role)', async ({ adminPage, page }) => {
     const userData = generateUserData('Admin');
 
     // 1. Open Add User form
-    await adminPage.openAddUser();
+    await adminPage.addUserButton.click();
+    await adminPage.saveUserButton.waitFor({ state: 'visible', timeout: 10000 });
 
-    // 2. Fill form and submit
-    await adminPage.createUser(userData, 'a');
+    // 2. Select Role
+    await adminPage.userRoleSelect.click();
+    await page.getByRole('option', { name: userData.role }).click();
 
-    // 3. Assert success toast appears
-    await adminPage.waitForToast();
+    // 3. Type Employee Name autocomplete and select genuine non-loading option
+    await adminPage.employeeNameAutocomplete.fill('a');
+    await adminPage.autocompleteDropdown.waitFor({ state: 'visible', timeout: 6000 });
+    const validOption = adminPage.autocompleteDropdown
+      .locator('.oxd-autocomplete-option')
+      .filter({ hasNotText: 'Searching' })
+      .first();
+    await validOption.waitFor({ state: 'visible', timeout: 8000 });
+    await validOption.click();
+
+    // 4. Select Status
+    await adminPage.statusSelect.click();
+    await page.getByRole('option', { name: userData.status }).click();
+
+    // 5. Enter Username & Password
+    await adminPage.usernameInput.fill(userData.username);
+    await adminPage.passwordInput.fill(userData.password);
+    await adminPage.confirmPasswordInput.fill(userData.password);
+
+    // 6. Submit form
+    await adminPage.saveUserButton.click();
+
+    // 7. Assert success toast appears
+    await expect(adminPage.toast).toBeVisible();
     await expect(adminPage.toast).toContainText('Successfully Saved');
   });
 
   test('[TC-UI-18] @regression @security — Duplicate Username Rejection', async ({ adminPage }) => {
     // 1. Open Add User form
-    await adminPage.openAddUser();
+    await adminPage.addUserButton.click();
+    await adminPage.saveUserButton.waitFor({ state: 'visible', timeout: 10000 });
 
     // 2. Type existing username "Admin" and trigger blur
     await adminPage.usernameInput.fill('Admin');
@@ -39,9 +64,18 @@ test.describe('Admin User Role & Provisioning Suite', () => {
     await expect(adminPage.alreadyExistsError).toBeVisible();
   });
 
-  test('[TC-UI-19] @sanity — Filter Users by Role (Admin)', async ({ adminPage }) => {
+  test('[TC-UI-19] @sanity — Filter Users by Role (Admin)', async ({ adminPage, page }) => {
     // 1. Apply filter by User Role "Admin"
-    await adminPage.filterByRole('Admin');
+    await adminPage.searchUserRoleDropdown.click();
+    await page.getByRole('option', { name: 'Admin' }).click();
+
+    const searchPromise = page.waitForResponse(
+      (res) => res.url().includes('/api/v2/admin/users') && res.status() === 200,
+      { timeout: 10000 }
+    ).catch(() => null);
+
+    await adminPage.searchButton.click();
+    await searchPromise;
 
     // 2. Wait for loading spinner to clear so the grid settles
     await adminPage.waitForSpinner();
@@ -57,5 +91,4 @@ test.describe('Admin User Role & Provisioning Suite', () => {
       await expect(cell).toHaveText('Admin');
     }
   });
-
 });

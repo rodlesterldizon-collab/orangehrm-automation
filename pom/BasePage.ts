@@ -27,15 +27,6 @@ export class BasePage {
     await this.page.goto(path);
   }
 
-  async waitForToast(): Promise<void> {
-    await this.toast.waitFor({ state: 'visible', timeout: 10000 });
-  }
-
-  async getToastText(): Promise<string> {
-    await this.waitForToast();
-    return (await this.toastMessage.textContent()) || '';
-  }
-
   async waitForSpinner(timeout: number = 15000): Promise<void> {
     try {
       await this.spinner.waitFor({ state: 'visible', timeout: 2500 });

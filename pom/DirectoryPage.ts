@@ -53,6 +53,5 @@ export class DirectoryPage extends BasePage {
 
   async navigate(): Promise<void> {
     await this.goto('/web/index.php/directory/viewDirectory');
-    await this.recordsFoundLabel.waitFor({ state: 'visible', timeout: 10000 }).catch(() => null);
   }
 }

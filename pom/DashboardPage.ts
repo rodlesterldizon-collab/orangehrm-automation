@@ -13,7 +13,8 @@ export class DashboardPage extends BasePage {
 
   constructor(page: Page, request: APIRequestContext) {
     super(page, request);
-    this.root = this.page.getByRole('main');
+    // this.page.getByRole('main');
+    this.root = this.page.locator('[class*="layout-context"]');
     this.dashboardHeader = this.page.locator('header').getByText('Dashboard');
     this.quickLaunchWidget = this.root.locator('div').filter({ has: this.page.getByText('Quick Launch', { exact: true }) }).first();
     this.timeAtWorkWidget = this.root.locator('div').filter({ has: this.page.getByText('Time at Work', { exact: true }) }).first();
@@ -25,9 +26,5 @@ export class DashboardPage extends BasePage {
 
   async navigate(): Promise<void> {
     await this.goto('/web/index.php/dashboard/index');
-  }
-
-  async clickQuickLaunch(name: string): Promise<void> {
-    await this.quickLaunchWidget.getByRole('button', { name }).click();
   }
 }
