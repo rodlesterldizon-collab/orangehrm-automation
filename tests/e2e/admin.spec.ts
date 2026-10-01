@@ -4,12 +4,12 @@ import { generateUserData } from '../../utils/test-data.js';
 test.describe('Admin User Role & Provisioning Suite', () => {
   test('[TC-UI-15] @smoke — System Users Table Column Verification', async ({ adminPage }) => {
     // 1. Assert System Users headers are displayed properly (SS-02)
-    await expect(adminPage.table).toBeVisible();
-    await expect(adminPage.table).toContainText('Username');
-    await expect(adminPage.table).toContainText('User Role');
-    await expect(adminPage.table).toContainText('Employee Name');
-    await expect(adminPage.table).toContainText('Status');
-    await expect(adminPage.table).toContainText('Actions');
+    await expect(adminPage.tableHeadings).toBeVisible();
+    await expect(adminPage.tableHeadings).toContainText('Username');
+    await expect(adminPage.tableHeadings).toContainText('User Role');
+    await expect(adminPage.tableHeadings).toContainText('Employee Name');
+    await expect(adminPage.tableHeadings).toContainText('Status');
+    await expect(adminPage.tableHeadings).toContainText('Actions');
     await expect(adminPage.recordsFoundLabel).toBeVisible();
   });
 
@@ -39,6 +39,8 @@ test.describe('Admin User Role & Provisioning Suite', () => {
     await page.getByRole('option', { name: userData.status }).click();
 
     // 5. Enter Username & Password
+    await adminPage.sidebar.sidebarToggle.click();
+    await expect(adminPage.sidebar.container).toHaveClass(/toggled/);
     await adminPage.usernameInput.fill(userData.username);
     await adminPage.passwordInput.fill(userData.password);
     await adminPage.confirmPasswordInput.fill(userData.password);

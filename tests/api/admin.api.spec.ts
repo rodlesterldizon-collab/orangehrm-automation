@@ -5,9 +5,19 @@ import { generateUserData } from '../../utils/test-data.js';
 test.describe('API Admin User Role & RBAC Contract Suite', () => {
   let cookieHeader: { Cookie: string };
 
+  let empNumber: number;
+
   test.beforeEach(async ({ request }) => {
     const authCookie = await getAuthCookie(request);
     cookieHeader = { Cookie: `orangehrm=${authCookie}` };
+
+    // Fetch a real empNumber once — hardcoding 1 is not portable across environments
+    const empRes = await request.get('/web/index.php/api/v2/pim/employees?limit=1', {
+      headers: cookieHeader,
+    });
+    const empBody = await empRes.json();
+    empNumber = empBody?.data?.[0]?.empNumber;
+    if (!empNumber) throw new Error('No employees found in DB — empNumber required to create users');
   });
 
   test('[TC-API-11] @smoke — System Users List Contract & Properties', async ({ request }) => {
@@ -31,33 +41,45 @@ test.describe('API Admin User Role & RBAC Contract Suite', () => {
 
   test('[TC-API-12] @sanity — Create System User with Admin Role', async ({ request }) => {
     const userData = generateUserData('Admin');
+    let createdUserId: number | null = null;
 
-    const response = await request.post('/web/index.php/api/v2/admin/users', {
-      headers: cookieHeader,
-      data: {
-        username: userData.username,
-        password: userData.password,
-        status: true,
-        userRoleId: 1, // 1 = Admin
-        empNumber: 1,
-      },
-    });
+    try {
+      const response = await request.post('/web/index.php/api/v2/admin/users', {
+        headers: cookieHeader,
+        data: {
+          username: userData.username,
+          password: userData.password,
+          status: true,
+          userRoleId: 1, // 1 = Admin
+          empNumber,
+        },
+      });
 
-    // 201 Created or 200 depending on demo state
-    expect([200, 201]).toContain(response.status());
-    const body = await response.json();
-    expect(body.data.userName).toBe(userData.username);
+      // 201 Created or 200 depending on demo state
+      expect([200, 201]).toContain(response.status());
+      const body = await response.json();
+      expect(body.data.userName).toBe(userData.username);
+      createdUserId = body?.data?.id ?? null;
+    } finally {
+      // Teardown — always clean up created user to prevent stale data across runs
+      if (createdUserId) {
+        await request.delete('/web/index.php/api/v2/admin/users', {
+          headers: cookieHeader,
+          data: { ids: [createdUserId] },
+        });
+      }
+    }
   });
 
   test('[TC-API-13] @validation — Rejects Duplicate Username Creation with 422', async ({ request }) => {
     const response = await request.post('/web/index.php/api/v2/admin/users', {
       headers: cookieHeader,
       data: {
-        username: 'Admin', // Existing username
+        username: 'Admin', // Existing built-in username — always a duplicate
         password: 'Password@123',
         status: true,
         userRoleId: 1,
-        empNumber: 1,
+        empNumber,
       },
     });
 

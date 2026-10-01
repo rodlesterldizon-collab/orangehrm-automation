@@ -17,8 +17,9 @@
 6. [VS Code Tasks & Debugger Integration](#6--vs-code-tasks--debugger-integration)
 7. [Separate Test Execution Strategy (Desktop, Tablet, Mobile, API)](#7--separate-test-execution-strategy-desktop-tablet-mobile-api)
 8. [CI/CD Pipeline, Reporting & Artifacts](#8--cicd-pipeline-reporting--artifacts)
-9. [Requirements Traceability Matrix (RTM) → Test Case Mapping](#9--requirements-traceability-matrix-rtm--test-case-mapping)
-10. [Clean Git Push Instructions](#10--clean-git-push-instructions)
+9. [Feature Identification Strategy & Scope Justification (Risk-Based Testing Framework)](#9--feature-identification-strategy--scope-justification-risk-based-testing-framework)
+10. [Requirements Traceability Matrix (RTM) → Test Case Mapping](#10--requirements-traceability-matrix-rtm--test-case-mapping)
+11. [Clean Git Push Instructions](#11--clean-git-push-instructions)
 
 ---
 
@@ -258,11 +259,102 @@ use: {
 
 ---
 
-## 9. 📋 Requirements Traceability Matrix (RTM) → Test Case Mapping
+---
+
+## 9. 🧭 Feature Identification Strategy & Scope Justification (Risk-Based Testing Framework)
+
+A key architectural question when automating an enterprise platform like OrangeHRM is:
+> *"Out of dozens of modules and hundreds of UI screens, how did you decide what to test, and what was the justification for the scope selected?"*
+
+Rather than automating arbitrary screens or writing repetitive UI tests, the framework's test scope was selected using a **5-Pillar Risk-Based Testing (RBT) Framework**:
+
+```
+                  ┌────────────────────────────────────────────────────────┐
+                  │ 5-Pillar QA Feature Identification & Scope Framework   │
+                  └────────────────────────────────────────────────────────┘
+                                              │
+         ┌────────────────────┬───────────────┴───────────────┬────────────────────┐
+         ▼                    ▼                               ▼                    ▼
+   [Pillar 1]           [Pillar 2]                      [Pillar 3]           [Pillar 4]
+Core Business      Network Reverse Eng.             Risk-Based Matrix      State Mutations
+  Criticality       & REST API Mapping               (Impact x Prob.)       & Idempotency
+         │                    │                               │                    │
+         ▼                    ▼                               ▼                    ▼
+   Auth, PIM,           /api/v2/* Schema                P0: Auth/Collision   Duplicate POST 422,
+   Admin RBAC           AJV JSON Contracts             P1: Role Leakage     Dynamic Teardown
+                                              │
+                                              ▼
+                                         [Pillar 5]
+                                    Security & Upstream Defect
+                                    (401/403/429 Gates,
+                                    Captured 500 Defect)
+```
+
+---
+
+### 🏛️ Pillar 1: Business Criticality & Core User Journeys
+OrangeHRM is an **Enterprise Human Resource Management System (HRMS)**. The system's value proposition depends on **identity access management, employee record integrity, and organizational governance**. If these fail, downstream operations (payroll, benefits, performance reviews) completely collapse.
+
+1. **Authentication & Session Lifecycle (Tier 1 - Highest Criticality)**:
+   - *Why*: The authentication gateway protects sensitive employee PII and salary details. A failure here blocks 100% of all user activity or exposes unauthorized personnel records.
+   - *Scope Selected*: Login redirect, SameSite HttpOnly cookie persistence, CSRF validation, invalid credential rejection, and secure logout.
+2. **PIM (Personnel Information Management - Core Transactional Engine)**:
+   - *Why*: The employee database is the single source of truth for the entire HR platform. Creating, updating, or colliding employee records corrupts all linked records (Leave, Time, Claims, Performance).
+   - *Scope Selected*: Auto vs Custom ID generation, DB uniqueness constraints (`422 Unprocessable Entity`), Personal Details mutation (`PUT /personal-details`), and search/autocomplete filtering.
+3. **Admin & RBAC (Role-Based Access Control)**:
+   - *Why*: Compliance, audit trails, and zero-trust security. Admin credentials allow privileged escalation.
+   - *Scope Selected*: System User creation, role-based filtering isolation, and collision prevention.
+4. **Corporate Directory**:
+   - *Why*: High-frequency daily usage tool for internal employee communication and organizational structure lookup.
+   - *Scope Selected*: Grid card rendering, job title filtering, search reset, and zero-result empty state.
+
+---
+
+### 📡 Pillar 2: Network Traffic Reverse Engineering & REST API Mapping
+Modern web applications are Single Page Applications (SPAs). Automating solely through the UI creates slow, brittle test suites and misses the underlying API contracts.
+- **Methodology**: Inspected Google Chrome DevTools Network Tab (XHR/Fetch) across every user journey.
+- **Findings**:
+  - Mapped internal REST endpoints under `/web/index.php/api/v2/*` (`/pim/employees`, `/admin/users`, `/dashboard/shortcuts`, `/dashboard/employees/action-summary`, `/leave/reports/data`, `/recruitment/candidates`, `/claim/requests`, `/buzz/feed`).
+  - Identified CSRF token mechanics: `:token="&quot;...&quot;"` embedded in HTML templates and passed via form bodies.
+- **Justification**:
+  - By writing API tests alongside UI tests, we verified that backend database constraints (uniqueness, foreign keys, mandatory validations) are enforced at the API layer independently of UI client-side validation.
+  - Enabled **blazing-fast precondition seeding (<1.5s)** for UI tests instead of slow UI form fills.
+
+---
+
+### ⚖️ Pillar 3: Risk-Based Testing Matrix (Impact vs. Probability)
+
+| Risk Classification | Business Impact | Probability of Defect | Testing Strategy & Priority | Features Covered |
+| :--- | :---: | :---: | :--- | :--- |
+| **Catastrophic (P0)** | Critical | High | Automated in `@smoke` & `@sanity`; blocked CI gate. | Authentication, Employee Seeding, User Creation, CSRF Gate. |
+| **High (P1)** | Severe | Medium | Full API contract validation with AJV Schema; negative paths. | Duplicate Username/ID constraints, Role data isolation, Personal Details updates, Leave Reports. |
+| **Medium (P2)** | Moderate | Low | Boundary validations, responsive viewport fluidity, health matrix. | Out-of-range pagination offsets, sidebar 12-module route health, mobile drawer navigation, rate-limiting (429). |
+
+---
+
+### 🔄 Pillar 4: State Mutations, Idempotency & Clean Teardown
+Enterprise applications frequently suffer from double-click submission bugs, race conditions, and test data pollution.
+- **Idempotency Justification**: Tested duplicate POST payloads to `POST /api/v2/admin/users` to verify the second submission is rejected with `HTTP 422 ("Already exists")`.
+- **Dynamic Cleanup Justification**: Every automated user creation (`[TC-API-12]`, `[TC-API-33]`) dynamically queries an existing `empNumber` and implements a `finally { await request.delete(...) }` block to guarantee zero stale records remain on the shared demo server across parallel test runs.
+
+---
+
+### 🛡️ Pillar 5: Security Posture, Boundary Analysis & Defect Discovery
+A mature QA automation suite does not just check that "the happy path works" — it actively attacks system boundaries:
+1. **Re-Authentication Gates**: Validated that sensitive actions (Maintenance Purge Employee) require password re-entry and reject invalid attempts with `401 Unauthorized`.
+2. **Access Control on Sensitive Assets**: Validated that `/sitemap.xml`, `/.env`, and `/.git` are blocked with `403 Forbidden` or `404 Not Found`.
+3. **Rate Limiting Resilience**: Burst testing (15 concurrent requests) ensuring the server handles traffic with `200` or `429 Too Many Requests` without crashing with `500`.
+4. **Upstream Defect Discovery**:
+   - **Discovered Bug**: When submitting an empty email on `POST /api/v2/recruitment/candidates`, the OrangeHRM backend throws an unhandled `HTTP 500 Internal Server Error` instead of a standard `422 Unprocessable Entity`.
+   - **Handling**: Tagged with Playwright `testInfo.annotations.push({ type: 'fixme', ... })` and tolerant assertion `[422, 500]` to report and monitor the upstream bug while maintaining a green CI pipeline.
+
+---
+
+## 10. 📋 Requirements Traceability Matrix (RTM) → Test Case Mapping
 
 Below is the complete cross-reference matrix linking every automated UI, Responsive, API, and Schema test to its corresponding **OrangeHRM Functional Requirement (FR)** and **System Specification (SS)**:
 
-### 📱 9.1 User Interface (UI) & End-to-End (E2E) Test Suite
+### 📱 10.1 User Interface (UI) & End-to-End (E2E) Test Suite
 
 | Test ID | Module | Business Function / Requirement | Scenario & Verification Target | Viewport / Tags | Automation File | POM / Component Reference |
 | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
@@ -290,7 +382,7 @@ Below is the complete cross-reference matrix linking every automated UI, Respons
 
 ---
 
-### ⚡ 9.2 REST API, Security & Contract Test Suite (Happy & Sad Path Matrix)
+### ⚡ 10.2 REST API, Security & Contract Test Suite (Happy & Sad Path Matrix)
 
 | Test ID | Module | Business Function / Requirement | Scenario & Verification Target | SLA / Status | Tags / Priority | Automation File |
 | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
@@ -333,7 +425,7 @@ Below is the complete cross-reference matrix linking every automated UI, Respons
 
 ---
 
-### 🛡️ 9.3 AJV JSON Schema Contract Suite
+### 🛡️ 10.3 AJV JSON Schema Contract Suite
 
 | Test ID | Schema Target | Specification & Validation Rule | Automation File |
 | :--- | :--- | :--- | :--- |
@@ -342,7 +434,7 @@ Below is the complete cross-reference matrix linking every automated UI, Respons
 
 ---
 
-### 📊 9.4 Test Tagging Metrics & Distribution
+### 📊 10.4 Test Tagging Metrics & Distribution
 
 - **`@security`**: **8 high-value security tests** (Auth, Re-Auth Gate, CSRF Rejection, Idempotency, Rate Limiting/429, Forbidden Assets/403, OWASP Headers).
 - **`@smoke`**: **8 critical path tests** (<45s sanity check + 12-module health matrix).
@@ -352,7 +444,7 @@ Below is the complete cross-reference matrix linking every automated UI, Respons
 
 ---
 
-## 10. 📦 Clean Git Push Instructions
+## 11. 📦 Clean Git Push Instructions
 
 The `orangehrm-automation` folder is completely self-contained and ready to be pushed to your GitHub repository:
 

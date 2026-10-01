@@ -41,28 +41,54 @@ test.describe('API Security, Headers & Re-Auth Gate Suite', () => {
     const authCookie = authRes.headers()['set-cookie']?.match(/orangehrm=([^;]+)/)?.[1] || '';
     const cookieHeader = { Cookie: `orangehrm=${authCookie}` };
 
-    const uniqueId = `IdemUser_${Date.now()}`;
+    // Fetch a real empNumber — empNumber: 1 may not exist in all environments
+    const empRes = await request.get('/web/index.php/api/v2/pim/employees?limit=1', {
+      headers: cookieHeader,
+    });
+    const empBody = await empRes.json();
+    const empNumber = empBody?.data?.[0]?.empNumber ?? empBody?.data?.[0]?.employeeId;
+    if (!empNumber) throw new Error('No employees found — cannot create user without a valid empNumber');
+
+    // Timestamp + random suffix prevents collisions on retries and parallel runs
+    const uniqueId = `IdemUser_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`;
     const userPayload = {
       username: uniqueId,
       password: 'StrongPassword123!',
       status: true,
       userRoleId: 1, // Admin
-      empNumber: 1,
+      empNumber,
     };
 
-    // 2. First creation request (Must succeed or handle state)
-    const res1 = await request.post('/web/index.php/api/v2/admin/users', {
-      headers: cookieHeader,
-      data: userPayload,
-    });
-    expect([200, 201]).toContain(res1.status());
+    let createdUserId: number | null = null;
 
-    // 3. Second identical request (Must fail due to idempotency & unique constraint)
-    const res2 = await request.post('/web/index.php/api/v2/admin/users', {
-      headers: cookieHeader,
-      data: userPayload,
-    });
-    expect(res2.status()).toBe(422); // 422 Unprocessable Entity ("Already exists")
+    try {
+      // 2. First creation request (Must succeed)
+      const res1 = await request.post('/web/index.php/api/v2/admin/users', {
+        headers: cookieHeader,
+        data: userPayload,
+      });
+      const res1Body = await res1.json().catch(() => res1.text());
+      console.log('[res1]', res1.status(), JSON.stringify(res1Body));
+      expect([200, 201]).toContain(res1.status());
+      createdUserId = (res1Body as any)?.data?.id ?? null;
+
+      // 3. Second identical request (Must fail — duplicate username)
+      const res2 = await request.post('/web/index.php/api/v2/admin/users', {
+        headers: cookieHeader,
+        data: userPayload,
+      });
+      const res2Body = await res2.json().catch(() => res2.text());
+      console.log('[res2]', res2.status(), JSON.stringify(res2Body));
+      expect(res2.status()).toBe(422); // 422 Unprocessable Entity ("Already exists")
+    } finally {
+      // 4. Teardown — delete the created user to avoid stale data on future runs
+      if (createdUserId) {
+        await request.delete(`/web/index.php/api/v2/admin/users`, {
+          headers: cookieHeader,
+          data: { ids: [createdUserId] },
+        });
+      }
+    }
   });
 
   test('[TC-API-34] @security — Rate Limiting & High-Concurrency Burst Resilience (HTTP 429 or Graceful Throttling)', async ({ request }) => {
