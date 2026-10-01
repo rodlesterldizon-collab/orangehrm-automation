@@ -76,4 +76,19 @@ test.describe('API Admin User Role & RBAC Contract Suite', () => {
       expect(user.userRole.id).toBe(1);
     }
   });
+
+  test('[TC-API-16] @validation — Missing Mandatory Username and Password Rejects with 422', async ({ request }) => {
+    const response = await request.post('/web/index.php/api/v2/admin/users', {
+      headers: cookieHeader,
+      data: {
+        username: '',
+        password: '',
+        status: true,
+        userRoleId: 1,
+        empNumber: null,
+      },
+    });
+
+    expect(response.status()).toBe(422);
+  });
 });

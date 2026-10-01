@@ -61,10 +61,48 @@ test.describe('API Authentication & Session Contract Suite', () => {
     expect(location).toContain('/auth/login');
   });
 
+  test('[TC-API-03] @validation — Blank credentials submission redirects to login with error', async ({ request }) => {
+    // 1. Fetch CSRF token
+    const loginPageRes = await request.get('/web/index.php/auth/login');
+    const html = await loginPageRes.text();
+    const csrfToken = html.match(/:token="&quot;([^&]+)&quot;"/)?.[1] || '';
+
+    // 2. Submit blank username and password
+    const response = await request.post('/web/index.php/auth/validate', {
+      form: {
+        _token: csrfToken,
+        username: '',
+        password: '',
+      },
+      maxRedirects: 0,
+    });
+
+    // Submitting blank credentials fails auth and redirects to /auth/login
+    expect([200, 302]).toContain(response.status());
+    const location = response.headers()['location'] || '';
+    expect(location).toContain('/auth/login');
+  });
+
   test('[TC-API-04] @sanity — Logout endpoint invalidates session token', async ({ request }) => {
     const logoutRes = await request.get('/web/index.php/auth/logout', { maxRedirects: 0 });
     expect([200, 302]).toContain(logoutRes.status());
     const location = logoutRes.headers()['location'] || '';
+    expect(location).toContain('/auth/login');
+  });
+
+  test('[TC-API-23] @security — Missing or invalid CSRF token fails authentication gate', async ({ request }) => {
+    const response = await request.post('/web/index.php/auth/validate', {
+      form: {
+        _token: 'invalid_forged_csrf_token_xyz',
+        username: creds.username,
+        password: creds.password,
+      },
+      maxRedirects: 0,
+    });
+
+    // In OrangeHRM, invalid CSRF fails auth and redirects back to /auth/login or throws 419/403
+    expect([200, 302, 419, 403]).toContain(response.status());
+    const location = response.headers()['location'] || '';
     expect(location).toContain('/auth/login');
   });
 });

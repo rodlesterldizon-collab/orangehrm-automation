@@ -97,4 +97,70 @@ test.describe('API PIM Employee Lifecycle & Constraints Suite', () => {
     expect(Array.isArray(body.data)).toBe(true);
     expect(body.meta).toHaveProperty('total');
   });
+
+  test('[TC-API-10] @validation — Missing Mandatory Names Rejects Employee Creation with 422', async ({ request }) => {
+    const response = await request.post('/web/index.php/api/v2/pim/employees', {
+      headers: cookieHeader,
+      data: {
+        firstName: '',
+        middleName: '',
+        lastName: '',
+        empPicture: null,
+      },
+    });
+
+    expect(response.status()).toBe(422);
+  });
+
+  test('[TC-API-17] @sanity — Update Employee Personal Details via PUT Endpoint', async ({ request }) => {
+    // 1. Seed an employee first
+    const employeeData = generateEmployeeData();
+    const seedRes = await request.post('/web/index.php/api/v2/pim/employees', {
+      headers: cookieHeader,
+      data: {
+        firstName: employeeData.firstName,
+        middleName: '',
+        lastName: employeeData.lastName,
+      },
+    });
+    expect([200, 201]).toContain(seedRes.status());
+    const seedBody = await seedRes.json();
+    const empNumber = seedBody.data.empNumber;
+
+    // 2. Update Personal Details via PUT
+    const updateRes = await request.put(`/web/index.php/api/v2/pim/employees/${empNumber}/personal-details`, {
+      headers: cookieHeader,
+      data: {
+        lastName: `${employeeData.lastName}Updated`,
+        firstName: employeeData.firstName,
+        middleName: 'Auto',
+        employeeId: employeeData.employeeId,
+        otherId: 'OTH-1234',
+        drivingLicenseNo: 'DL-998877',
+        drivingLicenseExpiredDate: '2030-12-31',
+        gender: 1, // Male
+        maritalStatus: 'Single',
+        nationalityId: 4,
+        birthday: '1995-05-15',
+      },
+    });
+
+    expect([200, 201]).toContain(updateRes.status());
+    const updateBody = await updateRes.json();
+    expect(updateBody.data).toBeDefined();
+    expect(updateBody.data.lastName).toBe(`${employeeData.lastName}Updated`);
+  });
+
+  test('[TC-API-18] @validation — Updating Non-Existent Employee Personal Details Rejects with 404/422', async ({ request }) => {
+    const response = await request.put('/web/index.php/api/v2/pim/employees/99999999/personal-details', {
+      headers: cookieHeader,
+      data: {
+        lastName: 'GhostUser',
+        firstName: 'Ghost',
+        employeeId: 'GH-999',
+      },
+    });
+
+    expect([404, 422, 400]).toContain(response.status());
+  });
 });

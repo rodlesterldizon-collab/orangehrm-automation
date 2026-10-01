@@ -38,4 +38,17 @@ test.describe('API Directory & Dashboard Shortcuts Contract Suite', () => {
     expect(body.data).toBeDefined();
     expect(typeof body.data).toBe('object');
   });
+
+  test('[TC-API-31] @validation — Directory Search Boundary Handling for Out-of-Range Offset', async ({ request }) => {
+    // Large offset returning empty result set gracefully (HTTP 200 with empty array)
+    const response = await request.get('/web/index.php/api/v2/directory/employees?limit=14&offset=999999', {
+      headers: cookieHeader,
+    });
+
+    expect(response.status()).toBe(200);
+    const body = await response.json();
+    expect(body.data).toBeDefined();
+    expect(Array.isArray(body.data)).toBe(true);
+    expect(body.data.length).toBe(0);
+  });
 });

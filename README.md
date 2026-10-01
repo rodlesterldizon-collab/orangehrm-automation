@@ -200,7 +200,7 @@ The suite provides dedicated scripts and projects for clean test separation:
 | **Validation Suite**| `@validation` | `npm run test:validation` | Deep boundary, validation & negative edge cases |
 | **Security Suite** | `@security` | `npm run test:security` | Auth gates, RBAC, DoS, OWASP headers & isolation |
 | **Desktop Cross-Browser** | Chrome, Edge, Safari | `npm run test:desktop` | 1280x720 cross-browser matrix |
-| **Tablet Viewport** | iPad (810x1080) | `npm run test:tablet` | Verifies hamburger navigation & drawer |
+| **Tablet Viewport** | iPad (768x1024) | `npm run test:tablet` | Verifies hamburger navigation & drawer |
 | **Mobile Viewport** | Pixel 7 (393x851) | `npm run test:mobile` | Validates mobile responsive layout & touch |
 | **REST API & Schema** | Backend Endpoints | `npm run test:api` | Fast headless contract validation (<15s) |
 | **AJV Schema Only** | JSON Schemas | `npm run test:schema` | Strict contract validation |
@@ -223,6 +223,38 @@ The GitHub Actions workflow (`.github/workflows/playwright.yml`) runs on push/PR
 3. **Artifact Retention**:
    - Each job uploads its Playwright HTML report (`playwright-report/`) to GitHub Artifacts with **14-day retention**.
    - Download reports directly from the GitHub Actions run summary and view with `npx playwright show-report <path>`.
+
+### 🎛️ 8.1 CI/CD Failure Artifacts & Media Capture Toggles
+
+Failure media recording (screenshots, video session playback, and DOM traces) can be toggled **ON or OFF** at any time without modifying core test code:
+
+| Setting / Env Variable | Supported Values | Default | Purpose |
+| :--- | :--- | :---: | :--- |
+| **`PLAYWRIGHT_SCREENSHOT`** | `'off'`, `'only-on-failure'`, `'on'` | `'off'` | Captures full-page screenshot at exact moment of failure. |
+| **`PLAYWRIGHT_VIDEO`** | `'off'`, `'retain-on-failure'`, `'on'` | `'off'` | Records web session; saves video playback for failed tests. |
+| **`PLAYWRIGHT_TRACE`** | `'off'`, `'on-first-retry'`, `'retain-on-failure'`, `'on'` | `'off'` | Records time-travel DOM, network, and console trace log. |
+
+#### How to Toggle via Environment Variables (`.env` or CI Secrets):
+```properties
+# Enable failure media capture (e.g. for debugging CI runs):
+PLAYWRIGHT_SCREENSHOT="only-on-failure"
+PLAYWRIGHT_VIDEO="retain-on-failure"
+PLAYWRIGHT_TRACE="on-first-retry"
+
+# Disable to optimize run speed & storage (Current Default):
+PLAYWRIGHT_SCREENSHOT="off"
+PLAYWRIGHT_VIDEO="off"
+PLAYWRIGHT_TRACE="off"
+```
+
+#### How to Toggle via `playwright.config.ts`:
+```typescript
+use: {
+  screenshot: 'off', // Toggle: 'off' | 'only-on-failure' | 'on'
+  video: 'off',      // Toggle: 'off' | 'retain-on-failure' | 'on'
+  trace: 'off',      // Toggle: 'off' | 'on-first-retry' | 'retain-on-failure' | 'on'
+}
+```
 
 ---
 
@@ -258,25 +290,46 @@ Below is the complete cross-reference matrix linking every automated UI, Respons
 
 ---
 
-### ⚡ 9.2 REST API, Security & Contract Test Suite
+### ⚡ 9.2 REST API, Security & Contract Test Suite (Happy & Sad Path Matrix)
 
-| Test ID | Module | Business Function / Requirement | Scenario & Verification Target | SLA / Status | Automation File |
-| :--- | :--- | :--- | :--- | :--- | :--- |
-| **TC-API-01** | **API Auth** | **FR-API-01:** Programmatic Login & CSRF Lifecycle | Extracts CSRF token from login HTML, submits credentials to `/auth/validate`, asserts HTTP 302 redirect, and validates `orangehrm` HttpOnly SameSite cookie. | HTTP 302<br>Latency < 2.5s | `tests/api/auth.api.spec.ts` |
-| **TC-API-02** | **API Auth** | **FR-API-02:** Unauthorized Credential Rejection | Submitting incorrect password fails authentication and redirects back to `/auth/login`. | HTTP 302 (Login URI)<br>`@security` | `tests/api/auth.api.spec.ts` |
-| **TC-API-04** | **API Auth** | **FR-API-03:** Programmatic Logout & Session Invalidation | Requesting GET `/auth/logout` terminates active session and redirects to `/auth/login`. | HTTP 302 | `tests/api/auth.api.spec.ts` |
-| **TC-API-05** | **API Dir** | **FR-API-04:** Dashboard Quick Launch Shortcuts | Validates GET `/api/v2/dashboard/shortcuts` endpoint returns valid data payload object. | HTTP 200 | `tests/api/directory.api.spec.ts` |
-| **TC-API-06** | **API PIM** | **FR-API-05:** Rapid Employee Precondition Seeding | Posts new employee payload to `/api/v2/pim/employees` in <1.5s, returning employee number and ID (used for fast test seeding). | HTTP 200/201<br>Latency < 1.5s | `tests/api/pim.api.spec.ts` |
-| **TC-API-07** | **API PIM** | **FR-API-06:** Custom Employee ID Schema Contract | Validates POST `/api/v2/pim/employees` accepts and persists custom `employeeId`. | HTTP 200/201 | `tests/api/pim.api.spec.ts` |
-| **TC-API-08** | **API PIM** | **FR-API-07:** DB Uniqueness Constraint on Employee ID | Attempting to create a second employee with an identical `employeeId` triggers HTTP 422/409 validation rejection. | HTTP 422 / 409<br>`@validation` | `tests/api/pim.api.spec.ts` |
-| **TC-API-09** | **API PIM** | **FR-API-08:** Employee List Pagination Contract | Validates GET `/api/v2/pim/employees?limit=10&offset=0` contains `data` array and `meta.total` count. | HTTP 200 | `tests/api/pim.api.spec.ts` |
-| **TC-API-11** | **API Admin** | **FR-API-09:** System Users List Contract | Validates GET `/api/v2/admin/users` returns list of user entities with `userName`, `userRole`, and `status`. | HTTP 200 | `tests/api/admin.api.spec.ts` |
-| **TC-API-12** | **API Admin** | **FR-API-10:** Programmatic System User Creation | Posts new system user payload with role ID 1 (Admin) and verifies created username. | HTTP 200/201 | `tests/api/admin.api.spec.ts` |
-| **TC-API-13** | **API Admin** | **FR-API-11:** Duplicate Username DB Constraint | Attempting to create a system user with existing username (`Admin`) triggers HTTP 422 error. | HTTP 422<br>`@validation` | `tests/api/admin.api.spec.ts` |
-| **TC-API-14** | **API Admin** | **FR-API-12:** Role ID Database Isolation Query | Validates GET `/api/v2/admin/users?userRoleId=1` returns only users where `userRole.id === 1`. | HTTP 200<br>`@validation` | `tests/api/admin.api.spec.ts` |
-| **TC-API-15** | **API Dir** | **FR-API-13:** Directory Employee Card Contract | Validates GET `/api/v2/directory/employees` returns employee cards with `firstName` and `lastName`. | HTTP 200 | `tests/api/directory.api.spec.ts` |
-| **TC-API-22** | **API Sec** | **FR-API-14:** Maintenance Purge Authorization Gate | Unauthorized POST to `/api/v2/maintenance/purge/validate-password` with incorrect password is rejected with 401/403. | HTTP 401 / 403<br>`@security` | `tests/api/security.api.spec.ts` |
-| **SEC-HDR-01**| **API Sec** | **FR-API-15:** OWASP Security Headers Verification | Validates server returns standard security headers including `Content-Type` and `X-Content-Type-Options: nosniff`. | Header Check<br>`@security` | `tests/api/security.api.spec.ts` |
+| Test ID | Module | Business Function / Requirement | Scenario & Verification Target | SLA / Status | Tags / Priority | Automation File |
+| :--- | :--- | :--- | :--- | :--- | :--- | :--- |
+| **TC-API-01** | **API Auth** | **FR-API-01:** Programmatic Login & CSRF Lifecycle | Extracts CSRF token from login HTML, submits credentials to `/auth/validate`, asserts HTTP 302 redirect, and validates `orangehrm` HttpOnly SameSite cookie. | HTTP 302<br>Latency < 2.5s | `@smoke` `@sanity`<br>**P0 (Core)** | `tests/api/auth.api.spec.ts` |
+| **TC-API-02** | **API Auth** | **FR-API-02:** Unauthorized Credential Rejection | Submitting incorrect password fails authentication and redirects back to `/auth/login`. | HTTP 302 (Login URI) | `@security`<br>**P0 (Core)** | `tests/api/auth.api.spec.ts` |
+| **TC-API-03** | **API Auth** | **FR-API-03:** Blank Credentials Rejection | Submitting empty username and password fails authentication and redirects to `/auth/login`. | HTTP 302 (Login URI) | `@validation`<br>**P1 (Negative)** | `tests/api/auth.api.spec.ts` |
+| **TC-API-04** | **API Auth** | **FR-API-04:** Programmatic Logout & Session Invalidation | Requesting GET `/auth/logout` terminates active session and redirects to `/auth/login`. | HTTP 302 | `@sanity`<br>**P1 (Core)** | `tests/api/auth.api.spec.ts` |
+| **TC-API-05** | **API Dir** | **FR-API-05:** Dashboard Quick Launch Shortcuts | Validates GET `/api/v2/dashboard/shortcuts` endpoint returns valid data payload object. | HTTP 200 | `@smoke`<br>**P1 (Core)** | `tests/api/directory.api.spec.ts` |
+| **TC-API-06** | **API PIM** | **FR-API-06:** Rapid Employee Precondition Seeding | Posts new employee payload to `/api/v2/pim/employees` in <1.5s, returning employee number and ID (used for fast test seeding). | HTTP 200/201<br>Latency < 1.5s | `@smoke` `@sanity`<br>**P0 (Core)** | `tests/api/pim.api.spec.ts` |
+| **TC-API-07** | **API PIM** | **FR-API-07:** Custom Employee ID Schema Contract | Validates POST `/api/v2/pim/employees` accepts and persists custom `employeeId`. | HTTP 200/201 | `@sanity`<br>**P0 (Core)** | `tests/api/pim.api.spec.ts` |
+| **TC-API-08** | **API PIM** | **FR-API-08:** DB Uniqueness Constraint on Employee ID | Attempting to create a second employee with an identical `employeeId` triggers HTTP 422/409 validation rejection. | HTTP 422 / 409 | `@validation`<br>**P1 (Negative)** | `tests/api/pim.api.spec.ts` |
+| **TC-API-09** | **API PIM** | **FR-API-09:** Employee List Pagination Contract | Validates GET `/api/v2/pim/employees?limit=10&offset=0` contains `data` array and `meta.total` count. | HTTP 200 | `@sanity`<br>**P1 (Core)** | `tests/api/pim.api.spec.ts` |
+| **TC-API-10** | **API PIM** | **FR-API-10:** Missing Mandatory Names Validation | Attempting to create an employee with missing mandatory first/last names triggers HTTP 422. | HTTP 422 | `@validation`<br>**P1 (Negative)** | `tests/api/pim.api.spec.ts` |
+| **TC-API-11** | **API Admin** | **FR-API-11:** System Users List Contract | Validates GET `/api/v2/admin/users` returns list of user entities with `userName`, `userRole`, and `status`. | HTTP 200 | `@smoke`<br>**P0 (Core)** | `tests/api/admin.api.spec.ts` |
+| **TC-API-12** | **API Admin** | **FR-API-12:** Programmatic System User Creation | Posts new system user payload with role ID 1 (Admin) and verifies created username. | HTTP 200/201 | `@sanity`<br>**P1 (Core)** | `tests/api/admin.api.spec.ts` |
+| **TC-API-13** | **API Admin** | **FR-API-13:** Duplicate Username DB Constraint | Attempting to create a system user with existing username (`Admin`) triggers HTTP 422 error. | HTTP 422 | `@validation`<br>**P1 (Negative)** | `tests/api/admin.api.spec.ts` |
+| **TC-API-14** | **API Admin** | **FR-API-14:** Role ID Database Isolation Query | Validates GET `/api/v2/admin/users?userRoleId=1` returns only users where `userRole.id === 1`. | HTTP 200 | `@validation`<br>**P1 (Core)** | `tests/api/admin.api.spec.ts` |
+| **TC-API-15** | **API Dir** | **FR-API-15:** Directory Employee Card Contract | Validates GET `/api/v2/directory/employees` returns employee cards with `firstName` and `lastName`. | HTTP 200 | `@sanity`<br>**P1 (Core)** | `tests/api/directory.api.spec.ts` |
+| **TC-API-16** | **API Admin** | **FR-API-16:** Missing Mandatory User Fields Validation | Attempting to create a system user without username/password triggers HTTP 422. | HTTP 422 | `@validation`<br>**P1 (Negative)** | `tests/api/admin.api.spec.ts` |
+| **TC-API-17** | **API PIM** | **FR-API-17:** Update Personal Details PUT Contract | Updates employee personal details via `PUT /api/v2/pim/employees/{empNumber}/personal-details` and validates persisted attributes. | HTTP 200 | `@sanity`<br>**P1 (Core)** | `tests/api/pim.api.spec.ts` |
+| **TC-API-18** | **API PIM** | **FR-API-18:** Update Non-Existent Personal Details Rejection | Attempting to update personal details for non-existent employee ID returns HTTP 404/422. | HTTP 404 / 422 | `@validation`<br>**P2 (Negative)** | `tests/api/pim.api.spec.ts` |
+| **TC-API-19** | **API Leave**| **FR-API-19:** Leave Balance Report Generation Contract | Validates GET `/api/v2/leave/reports/data` returns structured leave entitlement balances for active period. | HTTP 200 | `@sanity`<br>**P1 (Core)** | `tests/api/leave.api.spec.ts` |
+| **TC-API-20** | **API Leave**| **FR-API-20:** Leave Report Missing Date Range Rejection | Requesting leave balance report without mandatory date range parameters returns HTTP 422/400. | HTTP 422 / 400 | `@validation`<br>**P2 (Negative)** | `tests/api/leave.api.spec.ts` |
+| **TC-API-21** | **API Leave**| **FR-API-21:** Leave Types List for Assign Leave Contract | Validates GET `/api/v2/leave/leave-types` returns active leave entitlement types. | HTTP 200 | `@sanity`<br>**P1 (Core)** | `tests/api/leave.api.spec.ts` |
+| **TC-API-22** | **API Sec** | **FR-API-22:** Maintenance Purge Authorization Gate | Unauthorized POST to `/api/v2/maintenance/purge/validate-password` with incorrect password is rejected with 401/403. | HTTP 401 / 403 | `@security`<br>**P1 (Security)** | `tests/api/security.api.spec.ts` |
+| **TC-API-23** | **API Sec** | **FR-API-23:** CSRF Token Forgery Rejection Gate | Submitting login credentials with invalid/forged `_token` fails authentication gate. | HTTP 302 / 419 | `@security`<br>**P2 (Security)** | `tests/api/auth.api.spec.ts` |
+| **TC-API-24** | **API Rec** | **FR-API-24:** Create Recruitment Candidate Contract | Posts new candidate payload to `POST /api/v2/recruitment/candidates` and validates created candidate entity. | HTTP 200/201 | `@sanity`<br>**P1 (Core)** | `tests/api/recruitment.api.spec.ts` |
+| **TC-API-25** | **API Rec** | **FR-API-25:** Candidate Email Format Validation Rejection | Creating a candidate with malformed email triggers HTTP 422 Unprocessable Entity. | HTTP 422 | `@validation`<br>**P2 (Negative)** | `tests/api/recruitment.api.spec.ts` |
+| **TC-API-26** | **API Rec** | **FR-API-26:** Candidate Missing Mandatory Names Rejection | Creating a candidate without first/last name triggers HTTP 422. | HTTP 422 | `@validation`<br>**P1 (Negative)** | `tests/api/recruitment.api.spec.ts` |
+| **TC-API-27** | **API Claim**| **FR-API-27:** Claim Requests Default Search Contract | Validates GET `/api/v2/claim/requests?limit=50&offset=0` returns claim records list. | HTTP 200 | `@sanity`<br>**P1 (Core)** | `tests/api/modules.api.spec.ts` |
+| **TC-API-28** | **API Buzz** | **FR-API-28:** Buzz Newsfeed Stream API Contract | Validates GET `/api/v2/buzz/feed?limit=10&offset=0` returns active social stream posts. | HTTP 200 | `@sanity`<br>**P1 (Core)** | `tests/api/modules.api.spec.ts` |
+| **TC-API-29** | **API Maint**| **FR-API-29:** Maintenance Purge Employee Page State Check | Verifies GET `/maintenance/purgeEmployee` loads valid HTML state for authenticated user. | HTTP 200 | `@sanity`<br>**P2 (Health)** | `tests/api/modules.api.spec.ts` |
+| **TC-API-30** | **API Health**| **FR-API-30:** Sidebar Navigation Health Matrix (12 Modules) | Verifies all 12 core sidebar routes (Admin, PIM, Leave, Time, Recruitment, My Info, Performance, Dashboard, Directory, Maintenance, Claim, Buzz) load HTTP 200. | HTTP 200 across 12 endpoints | `@smoke`<br>**P2 (Health)** | `tests/api/modules.api.spec.ts` |
+| **TC-API-31** | **API Dir** | **FR-API-31:** Directory Search Out-of-Range Offset Boundary | Requests directory employees with high offset (`offset=999999`) and validates graceful 0-item response array. | HTTP 200 (`data: []`) | `@validation`<br>**P2 (Boundary)** | `tests/api/directory.api.spec.ts` |
+| **TC-API-32** | **API Dash**| **FR-API-32:** User Session & Dashboard Action Summary | Validates GET `/api/v2/dashboard/employees/action-summary` returns active employee session quick action counts. | HTTP 200 | `@smoke` `@sanity`<br>**P1 (Core)** | `tests/api/modules.api.spec.ts` |
+| **TC-API-33** | **API Sec** | **FR-API-33:** Admin User Creation Idempotency & Collision Gate | Submitting identical user payload consecutively rejects second call with HTTP 422 ("Already exists"). | HTTP 422 | `@security` `@validation`<br>**P1 (Idempotency)** | `tests/api/security.api.spec.ts` |
+| **TC-API-34** | **API Sec** | **FR-API-34:** High-Concurrency Burst Resilience & Rate Limiting | Sends burst of 15 rapid concurrent requests to verify server handles traffic without 500 errors (HTTP 200/429). | HTTP 200 / 429 | `@security`<br>**P2 (DoS/RateLimit)**| `tests/api/security.api.spec.ts` |
+| **TC-API-35** | **API Sec** | **FR-API-35:** Forbidden Assets & Sitemap Access Restriction | Requests `/sitemap.xml`, `/.env`, and system files to ensure server returns 403 Forbidden / 404 Not Found. | HTTP 403 / 404 | `@security`<br>**P2 (Security)** | `tests/api/security.api.spec.ts` |
+| **SEC-HDR-01**| **API Sec** | **FR-API-36:** OWASP Security Headers Verification | Validates server returns standard security headers including `Content-Type` and `X-Content-Type-Options: nosniff`. | Header Check | `@security`<br>**P1 (Security)** | `tests/api/security.api.spec.ts` |
 
 ---
 
@@ -291,10 +344,10 @@ Below is the complete cross-reference matrix linking every automated UI, Respons
 
 ### 📊 9.4 Test Tagging Metrics & Distribution
 
-- **`@security`**: **Exactly 4 high-value tests** (Authentication, Password Re-Auth Gate, OWASP Headers).
-- **`@smoke`**: **6 critical path tests** (<45s sanity check).
-- **`@sanity`**: **12 core happy-path CRUD tests**.
-- **`@validation`**: **16 boundary, validation, and negative tests**.
+- **`@security`**: **8 high-value security tests** (Auth, Re-Auth Gate, CSRF Rejection, Idempotency, Rate Limiting/429, Forbidden Assets/403, OWASP Headers).
+- **`@smoke`**: **8 critical path tests** (<45s sanity check + 12-module health matrix).
+- **`@sanity`**: **22 core happy-path CRUD & API contract tests**.
+- **`@validation`**: **25 boundary, negative, and input validation tests**.
 - **`@tablet` / `@mobile`**: **7 responsive multi-device tests**.
 
 ---

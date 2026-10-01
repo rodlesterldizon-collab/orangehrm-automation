@@ -31,9 +31,9 @@ export default defineConfig({
   },
   use: {
     baseURL: baseUrl,
-    trace: 'on-first-retry',
-    screenshot: 'only-on-failure',
-    video: 'retain-on-failure',
+    trace: (process.env.PLAYWRIGHT_TRACE as 'off' | 'on' | 'retain-on-failure' | 'on-first-retry') || 'off',
+    screenshot: (process.env.PLAYWRIGHT_SCREENSHOT as 'off' | 'on' | 'only-on-failure') || 'off', // Set to 'only-on-failure' or 'on' when you want to enable
+    video: (process.env.PLAYWRIGHT_VIDEO as 'off' | 'on' | 'retain-on-failure') || 'off',          // Set to 'retain-on-failure' or 'on' when you want to enable
     actionTimeout: 10000,
     navigationTimeout: 15000,
   },

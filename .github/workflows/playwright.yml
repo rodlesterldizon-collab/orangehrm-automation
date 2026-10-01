@@ -119,7 +119,7 @@ jobs:
           retention-days: 14
 
   # ─────────────────────────────────────────────────────────────────
-  # Job 3: Tablet Responsive E2E Suite (iPad 810x1080)
+  # Job 3: Tablet Responsive E2E Suite (iPad 768x1024)
   # ─────────────────────────────────────────────────────────────────
   tablet-e2e:
     name: "Tablet Responsive E2E (iPad @tablet)"
@@ -161,7 +161,7 @@ jobs:
           echo "| :--- | :--- |" >> $GITHUB_STEP_SUMMARY
           echo "| **Container Image** | \`ghcr.io/rodlesterldizon-collab/core-test-suite/test-runner:v1.62.1\` |" >> $GITHUB_STEP_SUMMARY
           echo "| **Status** | ${{ job.status }} |" >> $GITHUB_STEP_SUMMARY
-          echo "| **Device Profile** | iPad (gen 7) · 810x1080 |" >> $GITHUB_STEP_SUMMARY
+          echo "| **Device Profile** | iPad (9th/8th/mini/5th/older) · 768x1024 |" >> $GITHUB_STEP_SUMMARY
           echo "| **Target Tag** | \`@tablet\` |" >> $GITHUB_STEP_SUMMARY
 
       - name: Upload Tablet HTML Test Report
@@ -243,7 +243,7 @@ jobs:
           echo "| :--- | :--- | :--- |" >> $GITHUB_STEP_SUMMARY
           echo "| **REST API & Schema Suite** | Headless Node.js · AJV Engine | ${{ needs.api-tests.result }} |" >> $GITHUB_STEP_SUMMARY
           echo "| **Desktop Cross-Browser E2E** | Chromium, MS Edge, WebKit (Safari) | ${{ needs.desktop-e2e.result }} |" >> $GITHUB_STEP_SUMMARY
-          echo "| **Tablet Responsive E2E** | Apple iPad (810x1080) | ${{ needs.tablet-e2e.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| **Tablet Responsive E2E** | Apple iPad (768x1024) | ${{ needs.tablet-e2e.result }} |" >> $GITHUB_STEP_SUMMARY
           echo "| **Mobile Responsive E2E** | Google Pixel 7 (393x851) | ${{ needs.mobile-e2e.result }} |" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "### 🚀 Container Performance Advantage" >> $GITHUB_STEP_SUMMARY
