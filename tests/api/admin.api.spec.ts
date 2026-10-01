@@ -49,7 +49,7 @@ test.describe('API Admin User Role & RBAC Contract Suite', () => {
     expect(body.data.userName).toBe(userData.username);
   });
 
-  test('[TC-API-13] @security — Rejects Duplicate Username Creation with 422', async ({ request }) => {
+  test('[TC-API-13] @validation — Rejects Duplicate Username Creation with 422', async ({ request }) => {
     const response = await request.post('/web/index.php/api/v2/admin/users', {
       headers: cookieHeader,
       data: {
@@ -64,7 +64,7 @@ test.describe('API Admin User Role & RBAC Contract Suite', () => {
     expect(response.status()).toBe(422);
   });
 
-  test('[TC-API-14] @regression — User Filter by Role ID enforces DB Isolation', async ({ request }) => {
+  test('[TC-API-14] @validation — User Filter by Role ID enforces DB Isolation', async ({ request }) => {
     const response = await request.get('/web/index.php/api/v2/admin/users?userRoleId=1', {
       headers: cookieHeader,
     });

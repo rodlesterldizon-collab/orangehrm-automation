@@ -31,7 +31,7 @@ test.describe('Authentication & Session Management Suite', () => {
     await expect(page).toHaveURL(/.*\/auth\/login/);
   });
 
-  test('[TC-UI-03] @regression — Blank Input Field Validation Errors', async ({ loginPage }) => {
+  test('[TC-UI-03] @validation — Blank Input Field Validation Errors', async ({ loginPage }) => {
     // 1. Submit with empty inputs
     await loginPage.usernameInput.fill('');
     await loginPage.passwordInput.fill('');

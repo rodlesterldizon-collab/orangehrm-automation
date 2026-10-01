@@ -5,10 +5,12 @@ export class Sidebar {
   readonly root: Locator;
   readonly container: Locator;
   readonly searchInput: Locator;
+  readonly sidebarToggle: Locator;
 
   constructor(page: Page) {
     this.page = page;
     this.root = this.page.getByRole('navigation').first().or(this.page.locator('aside')).first();
+    this.sidebarToggle = this.root.getByRole('navigation', { name: 'Sidepanel' }).getByRole('button');
     this.container = this.root;
     this.searchInput = this.root.getByPlaceholder('Search');
   }

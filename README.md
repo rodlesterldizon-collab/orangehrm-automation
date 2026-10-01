@@ -159,7 +159,7 @@ Outputs:
 - `tests/generated/<feature>.e2e.spec.ts`
 
 ### 2. Self-Healing Locator & Test Healer Engine (`npm run test:heal`)
-Scans Page Object Models (`pom/pages/`, `pom/components/`), audits locator resilience, detects fragile selectors (brittle `nth-child` chains, deep positional XPaths, unqualified inputs), and provides self-healing recommendations.
+Scans Page Object Models (`pom/`, `pom/components/`), audits locator resilience, detects fragile selectors (brittle `nth-child` chains, deep positional XPaths, unqualified inputs), and provides self-healing recommendations.
 
 ```bash
 npm run test:heal
@@ -195,6 +195,10 @@ The suite provides dedicated scripts and projects for clean test separation:
 | Suite / Project | Target Scope | Command | Description |
 | :--- | :--- | :--- | :--- |
 | **All Tests** | Complete Suite | `npm test` | Runs entire E2E and API catalog |
+| **Smoke Suite** | `@smoke` | `npm run test:smoke` | Fast critical path checks (<45s) |
+| **Sanity Suite** | `@sanity` | `npm run test:sanity` | Core functional workflows & happy paths |
+| **Validation Suite**| `@validation` | `npm run test:validation` | Deep boundary, validation & negative edge cases |
+| **Security Suite** | `@security` | `npm run test:security` | Auth gates, RBAC, DoS, OWASP headers & isolation |
 | **Desktop Cross-Browser** | Chrome, Edge, Safari | `npm run test:desktop` | 1280x720 cross-browser matrix |
 | **Tablet Viewport** | iPad (810x1080) | `npm run test:tablet` | Verifies hamburger navigation & drawer |
 | **Mobile Viewport** | Pixel 7 (393x851) | `npm run test:mobile` | Validates mobile responsive layout & touch |
@@ -224,47 +228,74 @@ The GitHub Actions workflow (`.github/workflows/playwright.yml`) runs on push/PR
 
 ## 9. 📋 Requirements Traceability Matrix (RTM) → Test Case Mapping
 
-| Test ID | Module | Scenario & Target | Viewport / Channel | Automation File |
-| :--- | :--- | :--- | :--- | :--- |
-| **TC-UI-01** | Auth | Valid Administrator Login & Header | Desktop, Tablet, Mobile | `tests/e2e/auth.spec.ts` |
-| **TC-UI-02** | Auth | Invalid Credentials & Error Message | Desktop, Tablet, Mobile | `tests/e2e/auth.spec.ts` |
-| **TC-UI-03** | Auth | Required Field Validations | Desktop | `tests/e2e/auth.spec.ts` |
-| **TC-UI-04** | Auth | Session Logout & Cache Clearance | Desktop, Tablet, Mobile | `tests/e2e/auth.spec.ts` |
-| **TC-UI-05** | Admin | Search System Users & Data Grid Filter | Desktop | `tests/e2e/admin.spec.ts` |
-| **TC-UI-06** | Admin | Create New System User with Role & Status | Desktop | `tests/e2e/admin.spec.ts` |
-| **TC-UI-07** | Admin | Duplicate Username Validation | Desktop | `tests/e2e/admin.spec.ts` |
-| **TC-UI-08** | Admin | Edit Existing System User Role | Desktop | `tests/e2e/admin.spec.ts` |
-| **TC-UI-09** | Admin | Delete System User & Confirm Modal | Desktop | `tests/e2e/admin.spec.ts` |
-| **TC-UI-10** | Admin | Reset Filter Form Validation | Desktop | `tests/e2e/admin.spec.ts` |
-| **TC-UI-11** | PIM | Search Employee by ID & Name | Desktop | `tests/e2e/pim.spec.ts` |
-| **TC-UI-12** | PIM | Add Employee with Auto-Generated ID | Desktop | `tests/e2e/pim.spec.ts` |
-| **TC-UI-13** | PIM | Add Employee with Login Credentials Toggle | Desktop | `tests/e2e/pim.spec.ts` |
-| **TC-UI-14** | PIM | Mandatory Field Validations (First/Last Name) | Desktop | `tests/e2e/pim.spec.ts` |
-| **TC-UI-15** | PIM | Edit Personal Details (License, Expiry, Nationality) | Desktop | `tests/e2e/pim.spec.ts` |
-| **TC-UI-16** | PIM | Delete Employee & Verify Record Removal | Desktop | `tests/e2e/pim.spec.ts` |
-| **TC-UI-17** | PIM | Bulk Delete Confirmation Modal | Desktop | `tests/e2e/pim.spec.ts` |
-| **TC-UI-18** | Directory | Directory Search by Name & Autocomplete | Desktop | `tests/e2e/directory.spec.ts` |
-| **TC-UI-19** | Directory | Directory Job Title Dropdown Filter | Desktop | `tests/e2e/directory.spec.ts` |
-| **TC-UI-20** | Directory | Directory Location Filter Verification | Desktop | `tests/e2e/directory.spec.ts` |
-| **TC-UI-21** | Directory | Employee Profile Card Modal Inspection | Desktop | `tests/e2e/directory.spec.ts` |
-| **TC-UI-22** | Dashboard | Dashboard Quick Launch Shortcuts Navigation | Desktop | `tests/e2e/dashboard.spec.ts` |
-| **TC-UI-23** | Dashboard | Time at Work Widget Visibility | Desktop | `tests/e2e/dashboard.spec.ts` |
-| **TC-UI-24** | Dashboard | Employee Distribution Chart Rendering | Desktop | `tests/e2e/dashboard.spec.ts` |
-| **TC-UI-25** | Responsive | Topbar & Hamburger Navigation Drawer | Tablet, Mobile | `tests/e2e/responsive.spec.ts` |
-| **TC-UI-26** | Responsive | Dashboard Responsive Layout & No Scroll | Tablet, Mobile | `tests/e2e/responsive.spec.ts` |
-| **TC-UI-27** | Responsive | Directory Card Responsive Grid | Tablet, Mobile | `tests/e2e/responsive.spec.ts` |
-| **TC-API-01** | API Auth | Login Token Validation & Cookie Lifecycle | Headless | `tests/api/auth.api.spec.ts` |
-| **TC-API-02** | API Auth | Bad Credentials Rejection (HTTP 401) | Headless | `tests/api/auth.api.spec.ts` |
-| **TC-API-03** | API Auth | Response Latency Performance SLA (<1.5s) | Headless | `tests/api/auth.api.spec.ts` |
-| **TC-API-04** | API PIM | Rapid Employee Seeding (<200ms) | Headless | `tests/api/pim.api.spec.ts` |
-| **TC-API-05** | API PIM | Duplicate Employee ID Uniqueness Constraint | Headless | `tests/api/pim.api.spec.ts` |
-| **TC-API-06** | API PIM | Employee List Pagination Contract | Headless | `tests/api/pim.api.spec.ts` |
-| **TC-API-07** | API Admin | System Users List Contract Verification | Headless | `tests/api/admin.api.spec.ts` |
-| **TC-API-08** | API Admin | User Creation with RBAC Validation | Headless | `tests/api/admin.api.spec.ts` |
-| **TC-API-09** | API Admin | Duplicate Username Prevention | Headless | `tests/api/admin.api.spec.ts` |
-| **TC-API-10** | API Dir | Directory Search & Location Contracts | Headless | `tests/api/directory.api.spec.ts` |
-| **SCHEMA-01** | Schema | Dashboard Shortcuts AJV JSON Schema Validation | Headless | `tests/api/schema.api.spec.ts` |
-| **SCHEMA-02** | Schema | Localization Config AJV Schema Validation | Headless | `tests/api/schema.api.spec.ts` |
+Below is the complete cross-reference matrix linking every automated UI, Responsive, API, and Schema test to its corresponding **OrangeHRM Functional Requirement (FR)** and **System Specification (SS)**:
+
+### 📱 9.1 User Interface (UI) & End-to-End (E2E) Test Suite
+
+| Test ID | Module | Business Function / Requirement | Scenario & Verification Target | Viewport / Tags | Automation File | POM / Component Reference |
+| :--- | :--- | :--- | :--- | :--- | :--- | :--- |
+| **TC-UI-01** | **Auth** | **FR-AUTH-01:** Admin Authentication & Dashboard Routing | Valid administrator credentials submit successfully, redirect to `/dashboard/index`, and render Topbar breadcrumb and user profile menu. | Desktop, Tablet, Mobile<br>`@smoke` `@sanity` | `tests/e2e/auth.spec.ts` | `LoginPage.ts`<br>`Navbar.ts` |
+| **TC-UI-02** | **Auth** | **FR-AUTH-02:** Credential Failure & Error Banners | Submitting invalid password triggers error alert banner containing *"Invalid credentials"* and retains user on `/auth/login`. | Desktop, Tablet, Mobile<br>`@smoke` `@security` | `tests/e2e/auth.spec.ts` | `LoginPage.ts` |
+| **TC-UI-03** | **Auth** | **FR-AUTH-03:** Mandatory Field Validation | Submitting empty form highlights username and password fields with inline *"Required"* error tags. | Desktop<br>`@validation` | `tests/e2e/auth.spec.ts` | `LoginPage.ts` |
+| **TC-UI-04** | **Auth** | **FR-AUTH-04:** Session Termination & Logout | Pre-authenticated user opens topbar profile dropdown, clicks *Logout*, and is redirected back to `/auth/login` with session cleared. | Desktop, Tablet, Mobile<br>`@sanity` | `tests/e2e/auth.spec.ts` | `DashboardPage.ts`<br>`Navbar.ts` |
+| **TC-UI-09** | **PIM** | **FR-PIM-01:** Employee Provisioning (Auto ID) | Adding employee with generated first/last names and auto-assigned ID redirects to `/pim/viewPersonalDetails` with *"Successfully Saved"* toast. | Desktop<br>`@smoke` `@sanity` | `tests/e2e/pim.spec.ts` | `PimPage.ts`<br>`BasePage.ts` |
+| **TC-UI-10** | **PIM** | **FR-PIM-02:** Employee Provisioning (Custom Unique ID) | Adding employee with custom alphanumeric ID (`E#####`) persists custom ID without collision. | Desktop<br>`@sanity` | `tests/e2e/pim.spec.ts` | `PimPage.ts` |
+| **TC-UI-11** | **PIM** | **FR-PIM-03:** Form Validation Flags | Attempting to save new employee without mandatory First Name and Last Name displays inline *"Required"* validation flags. | Desktop<br>`@validation` | `tests/e2e/pim.spec.ts` | `PimPage.ts` |
+| **TC-UI-12** | **PIM** | **FR-PIM-04:** Employee Autocomplete Search | Typing employee name in search field populates autocomplete options; selecting and searching isolates matching employee record in data table. | Desktop<br>`@sanity` | `tests/e2e/pim.spec.ts` | `PimPage.ts` |
+| **TC-UI-14** | **PIM** | **FR-PIM-05:** Search Filter Reset | Resetting an empty or filtered search restores full employee record counter matching `/(.*)Records? Found/i` and multiple data rows. | Desktop<br>`@validation` | `tests/e2e/pim.spec.ts` | `PimPage.ts` |
+| **TC-UI-15** | **Admin** | **FR-ADM-01:** System Users Data Grid Schema | System Users table (`/admin/viewSystemUsers`) renders columns: *Username*, *User Role*, *Employee Name*, *Status*, and *Actions*. | Desktop<br>`@smoke` | `tests/e2e/admin.spec.ts` | `AdminPage.ts` |
+| **TC-UI-16** | **Admin** | **FR-ADM-02:** User Provisioning with Role Assignment | Adding system user with selected Role (*Admin*), linked Employee autocomplete, and enabled Status saves successfully with confirmation toast. | Desktop<br>`@sanity` | `tests/e2e/admin.spec.ts` | `AdminPage.ts` |
+| **TC-UI-18** | **Admin** | **FR-ADM-03:** Duplicate Username Collision Rejection | Entering an existing username (`Admin`) triggers live blur validation error *"Already exists"*. | Desktop<br>`@validation` | `tests/e2e/admin.spec.ts` | `AdminPage.ts` |
+| **TC-UI-19** | **Admin** | **FR-ADM-04:** Role-Based Data Isolation Filter | Filtering system users by role (*Admin*) intercepts GET `/api/v2/admin/users`, clears spinner, and verifies all rendered rows display role *"Admin"*. | Desktop<br>`@sanity` | `tests/e2e/admin.spec.ts` | `AdminPage.ts` |
+| **TC-UI-21** | **Directory** | **FR-DIR-01:** Corporate Directory Grid Rendering | Directory page (`/directory/viewDirectory`) displays records counter matching `/(.*)Records? Found/i` and employee card grid. | Desktop<br>`@smoke` | `tests/e2e/directory.spec.ts` | `DirectoryPage.ts` |
+| **TC-UI-22** | **Directory** | **FR-DIR-02:** Directory Name Search Autocomplete | Searching for employee name via autocomplete dropdown filters down directory card grid to matching profile cards. | Desktop<br>`@sanity` | `tests/e2e/directory.spec.ts` | `DirectoryPage.ts` |
+| **TC-UI-23** | **Directory** | **FR-DIR-03:** Job Title Filter & HTTP Contract | Selecting Job Title (*Chief Financial Officer*) intercepts GET `/api/v2/directory/employees` (HTTP 200) and asserts card contains title. | Desktop<br>`@validation` | `tests/e2e/directory.spec.ts` | `DirectoryPage.ts` |
+| **TC-UI-24** | **Directory** | **FR-DIR-04:** Filter Reset & Counter Restoration | Filtering and subsequent reset restores directory card grid and record counter to original total. | Desktop<br>`@validation` | `tests/e2e/directory.spec.ts` | `DirectoryPage.ts` |
+| **TC-UI-25** | **Directory** | **FR-DIR-05:** Zero Results Empty State | Filtering by mutually exclusive criteria (*HR Manager* + *Canadian Regional HQ*) displays *"No Records Found"* indicator and 0 cards. | Desktop<br>`@validation` | `tests/e2e/directory.spec.ts` | `DirectoryPage.ts` |
+| **TC-UI-25** | **Responsive** | **FR-RSP-01:** Mobile Drawer Navigation & Desktop Sidebar Collapse | Mobile/tablet: verifies hamburger button opens navigation drawer and routes to PIM.<br>Desktop: verifies sidebar toggle button collapses/expands sidebar (`.toggled` class check). | Desktop, Tablet, Mobile<br>`@validation` `@tablet` `@mobile` | `tests/e2e/responsive.spec.ts` | `DashboardPage.ts`<br>`Navbar.ts`<br>`Sidebar.ts` |
+| **TC-UI-26** | **Responsive** | **FR-RSP-02:** Dashboard Viewport Overflow Adaptability | Validates dashboard widgets and quick launch adapt to screen boundaries without triggering horizontal scrollbar overflow. | Tablet, Mobile<br>`@validation` `@tablet` `@mobile` | `tests/e2e/responsive.spec.ts` | `DashboardPage.ts`<br>`Navbar.ts` |
+| **TC-UI-27** | **Responsive** | **FR-RSP-03:** Directory Grid Mobile Fluidity & Collapsible Filter | Validates directory filter form and card grid adapt fluidly without horizontal clipping; handles and expands collapsed search filter panel (`directorySearchToggle`). | Tablet, Mobile<br>`@validation` `@tablet` `@mobile` | `tests/e2e/responsive.spec.ts` | `DirectoryPage.ts` |
+
+---
+
+### ⚡ 9.2 REST API, Security & Contract Test Suite
+
+| Test ID | Module | Business Function / Requirement | Scenario & Verification Target | SLA / Status | Automation File |
+| :--- | :--- | :--- | :--- | :--- | :--- |
+| **TC-API-01** | **API Auth** | **FR-API-01:** Programmatic Login & CSRF Lifecycle | Extracts CSRF token from login HTML, submits credentials to `/auth/validate`, asserts HTTP 302 redirect, and validates `orangehrm` HttpOnly SameSite cookie. | HTTP 302<br>Latency < 2.5s | `tests/api/auth.api.spec.ts` |
+| **TC-API-02** | **API Auth** | **FR-API-02:** Unauthorized Credential Rejection | Submitting incorrect password fails authentication and redirects back to `/auth/login`. | HTTP 302 (Login URI)<br>`@security` | `tests/api/auth.api.spec.ts` |
+| **TC-API-04** | **API Auth** | **FR-API-03:** Programmatic Logout & Session Invalidation | Requesting GET `/auth/logout` terminates active session and redirects to `/auth/login`. | HTTP 302 | `tests/api/auth.api.spec.ts` |
+| **TC-API-05** | **API Dir** | **FR-API-04:** Dashboard Quick Launch Shortcuts | Validates GET `/api/v2/dashboard/shortcuts` endpoint returns valid data payload object. | HTTP 200 | `tests/api/directory.api.spec.ts` |
+| **TC-API-06** | **API PIM** | **FR-API-05:** Rapid Employee Precondition Seeding | Posts new employee payload to `/api/v2/pim/employees` in <1.5s, returning employee number and ID (used for fast test seeding). | HTTP 200/201<br>Latency < 1.5s | `tests/api/pim.api.spec.ts` |
+| **TC-API-07** | **API PIM** | **FR-API-06:** Custom Employee ID Schema Contract | Validates POST `/api/v2/pim/employees` accepts and persists custom `employeeId`. | HTTP 200/201 | `tests/api/pim.api.spec.ts` |
+| **TC-API-08** | **API PIM** | **FR-API-07:** DB Uniqueness Constraint on Employee ID | Attempting to create a second employee with an identical `employeeId` triggers HTTP 422/409 validation rejection. | HTTP 422 / 409<br>`@validation` | `tests/api/pim.api.spec.ts` |
+| **TC-API-09** | **API PIM** | **FR-API-08:** Employee List Pagination Contract | Validates GET `/api/v2/pim/employees?limit=10&offset=0` contains `data` array and `meta.total` count. | HTTP 200 | `tests/api/pim.api.spec.ts` |
+| **TC-API-11** | **API Admin** | **FR-API-09:** System Users List Contract | Validates GET `/api/v2/admin/users` returns list of user entities with `userName`, `userRole`, and `status`. | HTTP 200 | `tests/api/admin.api.spec.ts` |
+| **TC-API-12** | **API Admin** | **FR-API-10:** Programmatic System User Creation | Posts new system user payload with role ID 1 (Admin) and verifies created username. | HTTP 200/201 | `tests/api/admin.api.spec.ts` |
+| **TC-API-13** | **API Admin** | **FR-API-11:** Duplicate Username DB Constraint | Attempting to create a system user with existing username (`Admin`) triggers HTTP 422 error. | HTTP 422<br>`@validation` | `tests/api/admin.api.spec.ts` |
+| **TC-API-14** | **API Admin** | **FR-API-12:** Role ID Database Isolation Query | Validates GET `/api/v2/admin/users?userRoleId=1` returns only users where `userRole.id === 1`. | HTTP 200<br>`@validation` | `tests/api/admin.api.spec.ts` |
+| **TC-API-15** | **API Dir** | **FR-API-13:** Directory Employee Card Contract | Validates GET `/api/v2/directory/employees` returns employee cards with `firstName` and `lastName`. | HTTP 200 | `tests/api/directory.api.spec.ts` |
+| **TC-API-22** | **API Sec** | **FR-API-14:** Maintenance Purge Authorization Gate | Unauthorized POST to `/api/v2/maintenance/purge/validate-password` with incorrect password is rejected with 401/403. | HTTP 401 / 403<br>`@security` | `tests/api/security.api.spec.ts` |
+| **SEC-HDR-01**| **API Sec** | **FR-API-15:** OWASP Security Headers Verification | Validates server returns standard security headers including `Content-Type` and `X-Content-Type-Options: nosniff`. | Header Check<br>`@security` | `tests/api/security.api.spec.ts` |
+
+---
+
+### 🛡️ 9.3 AJV JSON Schema Contract Suite
+
+| Test ID | Schema Target | Specification & Validation Rule | Automation File |
+| :--- | :--- | :--- | :--- |
+| **SCHEMA-01** | **Dashboard Shortcuts API** | Validates GET `/api/v2/dashboard/shortcuts` against strict JSON Schema (Draft-07) with required `data` object type. | `tests/api/schema.api.spec.ts` |
+| **SCHEMA-02** | **System Users List API** | Validates GET `/api/v2/admin/users` against strict JSON Schema enforcing `data: array`, `meta: object`, and `meta.total: number`. | `tests/api/schema.api.spec.ts` |
+
+---
+
+### 📊 9.4 Test Tagging Metrics & Distribution
+
+- **`@security`**: **Exactly 4 high-value tests** (Authentication, Password Re-Auth Gate, OWASP Headers).
+- **`@smoke`**: **6 critical path tests** (<45s sanity check).
+- **`@sanity`**: **12 core happy-path CRUD tests**.
+- **`@validation`**: **16 boundary, validation, and negative tests**.
+- **`@tablet` / `@mobile`**: **7 responsive multi-device tests**.
 
 ---
 

@@ -28,7 +28,7 @@ test.describe('Directory Search & Navigation Suite', () => {
     await expect(directoryPage.employeeCards.first()).toBeVisible();
   });
 
-  test('[TC-UI-23] @regression — Filter Directory by Job Title', async ({ directoryPage, page }) => {
+  test('[TC-UI-23] @validation — Filter Directory by Job Title', async ({ directoryPage, page }) => {
     await directoryPage.resetButton.click();
     await waitForSpinner(page);
 
@@ -61,7 +61,7 @@ test.describe('Directory Search & Navigation Suite', () => {
     await expect(directoryPage.employeeCards.first()).toContainText('Chief Financial Officer');
   });
 
-  test('[TC-UI-24] @regression — Reset Filter Restores Full Count', async ({ directoryPage, page }) => {
+  test('[TC-UI-24] @validation — Reset Filter Restores Full Count', async ({ directoryPage, page }) => {
     // 1. Ensure initial directory grid is loaded with records
     await expect(directoryPage.recordsFoundLabel).toHaveText(/.*Records? Found/i, { timeout: 10000 });
 
@@ -83,7 +83,7 @@ test.describe('Directory Search & Navigation Suite', () => {
     await expect(directoryPage.recordsFoundLabel).toHaveText(/.*Records? Found/i, { timeout: 10000 });
   });
 
-  test('[TC-UI-25] @regression @security — Filter by Job Title (HR Manager) and Location (Canadian Regional HQ) Displays No Records Found', async ({ directoryPage, page }) => {
+  test('[TC-UI-25] @validation — Filter by Job Title (HR Manager) and Location (Canadian Regional HQ) Displays No Records Found', async ({ directoryPage, page }) => {
     await directoryPage.resetButton.click();
     await waitForSpinner(page);
 

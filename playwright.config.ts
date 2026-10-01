@@ -89,8 +89,8 @@ export default defineConfig({
       dependencies: ['setup'],
       grep: /@tablet/,
       use: {
-        ...devices['iPad (gen 7)'],
-        viewport: { width: 810, height: 1080 },
+        ...devices['iPad 9th/8th/mini/5th/older'],
+        viewport: { width: 768, height: 1024 },
         storageState: authFile,
       },
     },

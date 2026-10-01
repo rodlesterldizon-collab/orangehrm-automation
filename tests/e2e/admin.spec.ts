@@ -51,7 +51,7 @@ test.describe('Admin User Role & Provisioning Suite', () => {
     await expect(adminPage.toast).toContainText('Successfully Saved');
   });
 
-  test('[TC-UI-18] @regression @security — Duplicate Username Rejection', async ({ adminPage }) => {
+  test('[TC-UI-18] @validation — Duplicate Username Rejection', async ({ adminPage }) => {
     // 1. Open Add User form
     await adminPage.addUserButton.click();
     await adminPage.saveUserButton.waitFor({ state: 'visible', timeout: 10000 });

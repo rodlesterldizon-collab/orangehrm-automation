@@ -53,7 +53,7 @@ test.describe('API PIM Employee Lifecycle & Constraints Suite', () => {
     expect(body.data.employeeId).toBe(employeeData.employeeId);
   });
 
-  test('[TC-API-08] @regression — Duplicate Employee ID returns 422 Uniqueness Error', async ({ request }) => {
+  test('[TC-API-08] @validation — Duplicate Employee ID returns 422 Uniqueness Error', async ({ request }) => {
     const employeeData = generateEmployeeData();
 
     // 1. First creation must succeed

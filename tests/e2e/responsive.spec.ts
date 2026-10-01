@@ -1,7 +1,7 @@
 import { test, expect } from '../../fixtures/page-objects.fixture.js';
 
 test.describe('Responsive Viewport & Mobile Navigation Suite', () => {
-  test('[TC-UI-25] @regression @tablet @mobile — Responsive Topbar & Collapsible Hamburger Navigation Bar', async ({
+  test('[TC-UI-25] @validation @tablet @mobile — Responsive Topbar & Collapsible Hamburger Navigation Bar', async ({
     dashboardPage,
     page,
   }) => {
@@ -31,14 +31,19 @@ test.describe('Responsive Viewport & Mobile Navigation Suite', () => {
       await expect(page).toHaveURL(/.*\/pim\/viewEmployeeList/);
     } else {
       // Desktop viewport: verify sidebar is expanded by default
+      await expect(dashboardPage.sidebar.container).not.toHaveClass(/toggled/);
       await expect(dashboardPage.sidebar.container).toBeVisible();
       await expect(dashboardPage.sidebar.getMenuItem('PIM')).toBeVisible();
       await dashboardPage.sidebar.navigateTo('PIM');
       await expect(page).toHaveURL(/.*\/pim\/viewEmployeeList/);
+
+      //check if sidebar is collapsed
+      await dashboardPage.sidebar.sidebarToggle.click();
+      await expect(dashboardPage.sidebar.container).toHaveClass(/toggled/);
     }
   });
 
-  test('[TC-UI-26] @regression @tablet @mobile — Dashboard Responsive Layout & Quick Launch Adaptability', async ({
+  test('[TC-UI-26] @validation @tablet @mobile — Dashboard Responsive Layout & Quick Launch Adaptability', async ({
     dashboardPage,
     page,
   }) => {
@@ -58,7 +63,7 @@ test.describe('Responsive Viewport & Mobile Navigation Suite', () => {
     await expect(dashboardPage.navbar.logoutLink).toBeVisible();
   });
 
-  test('[TC-UI-27] @regression @tablet @mobile — Directory Card Grid Responsive Viewport Adaptation', async ({
+  test('[TC-UI-27] @validation @tablet @mobile — Directory Card Grid Responsive Viewport Adaptation', async ({
     directoryPage,
     page,
   }) => {
@@ -66,6 +71,10 @@ test.describe('Responsive Viewport & Mobile Navigation Suite', () => {
     await directoryPage.navigate();
     await expect(page).toHaveURL(/.*\/directory\/viewDirectory/);
 
+    if (await directoryPage.isSearchCollapsed()) {
+      //click directory search toggle
+      await directoryPage.directorySearchToggle.click();
+    }
     // 2. Verify search form adapts to viewport without clipping
     await expect(directoryPage.searchButton).toBeVisible();
     await expect(directoryPage.resetButton).toBeVisible();

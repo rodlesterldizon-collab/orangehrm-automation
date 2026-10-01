@@ -46,7 +46,7 @@ test.describe('PIM Employee Lifecycle & Management Suite', () => {
     await expect(page).toHaveURL(/.*\/pim\/viewPersonalDetails/);
   });
 
-  test('[TC-UI-11] @regression — Mandatory Name Validation Flags', async ({ pimPage }) => {
+  test('[TC-UI-11] @validation — Mandatory Name Validation Flags', async ({ pimPage }) => {
     // 1. Navigate to Add Employee form
     await pimPage.navigateToAdd();
 
@@ -86,7 +86,7 @@ test.describe('PIM Employee Lifecycle & Management Suite', () => {
     await expect(pimPage.table).toContainText(employeeData.lastName);
   });
 
-  test('[TC-UI-14] @regression — Filter Reset Restores Original Records Count', async ({ pimPage, page }) => {
+  test('[TC-UI-14] @validation — Filter Reset Restores Original Records Count', async ({ pimPage, page }) => {
     await pimPage.navigateToList();
     await waitForSpinner(page);
 
