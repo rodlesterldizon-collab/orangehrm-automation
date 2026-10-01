@@ -3,7 +3,7 @@ import { generateEmployeeData } from '../../utils/test-data.js';
 import { waitForSpinner } from '../../utils/helpers.js';
 
 test.describe('PIM Employee Lifecycle & Management Suite', () => {
-  test('[TC-UI-09] @smoke @sanity — Add Employee with Auto-Generated ID', async ({ pimPage, page }) => {
+  test('[TC-UI-09] @smoke @sanity @p0 @pim — Add Employee with Auto-Generated ID', async ({ pimPage, page }) => {
     const employeeData = generateEmployeeData();
 
     // 1. Navigate to Add Employee form (SS-04)
@@ -23,7 +23,7 @@ test.describe('PIM Employee Lifecycle & Management Suite', () => {
     await expect(page).toHaveURL(/.*\/pim\/viewPersonalDetails\/empNumber\/\d+/);
   });
 
-  test('[TC-UI-10] @sanity — Add Employee with Custom Unique ID', async ({ pimPage, page }) => {
+  test('[TC-UI-10] @sanity @p0 @pim — Add Employee with Custom Unique ID', async ({ pimPage, page }) => {
     const employeeData = generateEmployeeData();
 
     // 1. Navigate to Add Employee form
@@ -46,7 +46,7 @@ test.describe('PIM Employee Lifecycle & Management Suite', () => {
     await expect(page).toHaveURL(/.*\/pim\/viewPersonalDetails/);
   });
 
-  test('[TC-UI-11] @validation — Mandatory Name Validation Flags', async ({ pimPage }) => {
+  test('[TC-UI-11] @validation @p1 @pim — Mandatory Name Validation Flags', async ({ pimPage }) => {
     // 1. Navigate to Add Employee form
     await pimPage.navigateToAdd();
 
@@ -59,7 +59,7 @@ test.describe('PIM Employee Lifecycle & Management Suite', () => {
     await expect(requiredLabels.first()).toHaveText('Required');
   });
 
-  test('[TC-UI-12] @sanity — Search Employee by Name Autocomplete Hint', async ({ pimPage, request }) => {
+  test('[TC-UI-12] @sanity @p1 @pim — Search Employee by Name Autocomplete Hint', async ({ pimPage, request }) => {
     // Fast API precondition seeding to guarantee target employee exists
     const employeeData = generateEmployeeData();
     await request.post('/web/index.php/api/v2/pim/employees', {
@@ -86,7 +86,7 @@ test.describe('PIM Employee Lifecycle & Management Suite', () => {
     await expect(pimPage.table).toContainText(employeeData.lastName);
   });
 
-  test('[TC-UI-14] @validation — Filter Reset Restores Original Records Count', async ({ pimPage, page }) => {
+  test('[TC-UI-14] @validation @p2 @pim — Filter Reset Restores Original Records Count', async ({ pimPage, page }) => {
     await pimPage.navigateToList();
     await waitForSpinner(page);
 

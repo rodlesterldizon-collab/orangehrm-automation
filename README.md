@@ -204,6 +204,8 @@ The suite provides dedicated scripts and projects for clean test separation:
 | **Tablet Viewport** | iPad (768x1024) | `npm run test:tablet` | Verifies hamburger navigation & drawer |
 | **Mobile Viewport** | Pixel 7 (393x851) | `npm run test:mobile` | Validates mobile responsive layout & touch |
 | **REST API & Schema** | Backend Endpoints | `npm run test:api` | Fast headless contract validation (<15s) |
+| **Sidebar Navigation (P2)** | All 12 Modules UI + API | `npm run test:nav` | Validates all 12 sidebar links, HTTP 200 & DOM |
+| **Dashboard Widgets Suite** | Widgets & Shortcuts | `npm run test:dashboard` | Deep UI test of Quick Launch, Time at Work, Charts |
 | **AJV Schema Only** | JSON Schemas | `npm run test:schema` | Strict contract validation |
 | **Interactive UI Mode** | Visual Debugger | `npm run test:ui` | Playwright interactive time-travel UI |
 | **HTML Report** | Test Summary | `npm run report` | Opens HTML test report in browser |
@@ -378,7 +380,16 @@ Below is the complete cross-reference matrix linking every automated UI, Respons
 | **TC-UI-25** | **Directory** | **FR-DIR-05:** Zero Results Empty State | Filtering by mutually exclusive criteria (*HR Manager* + *Canadian Regional HQ*) displays *"No Records Found"* indicator and 0 cards. | Desktop<br>`@validation` | `tests/e2e/directory.spec.ts` | `DirectoryPage.ts` |
 | **TC-UI-25** | **Responsive** | **FR-RSP-01:** Mobile Drawer Navigation & Desktop Sidebar Collapse | Mobile/tablet: verifies hamburger button opens navigation drawer and routes to PIM.<br>Desktop: verifies sidebar toggle button collapses/expands sidebar (`.toggled` class check). | Desktop, Tablet, Mobile<br>`@validation` `@tablet` `@mobile` | `tests/e2e/responsive.spec.ts` | `DashboardPage.ts`<br>`Navbar.ts`<br>`Sidebar.ts` |
 | **TC-UI-26** | **Responsive** | **FR-RSP-02:** Dashboard Viewport Overflow Adaptability | Validates dashboard widgets and quick launch adapt to screen boundaries without triggering horizontal scrollbar overflow. | Tablet, Mobile<br>`@validation` `@tablet` `@mobile` | `tests/e2e/responsive.spec.ts` | `DashboardPage.ts`<br>`Navbar.ts` |
-| **TC-UI-27** | **Responsive** | **FR-RSP-03:** Directory Grid Mobile Fluidity & Collapsible Filter | Validates directory filter form and card grid adapt fluidly without horizontal clipping; handles and expands collapsed search filter panel (`directorySearchToggle`). | Tablet, Mobile<br>`@validation` `@tablet` `@mobile` | `tests/e2e/responsive.spec.ts` | `DirectoryPage.ts` |
+| **TC-UI-27** | **Responsive** | **FR-RSP-03:** Directory Grid Mobile Fluidity & Collapsible Filter | Validates directory filter form and card grid adapt fluidly without horizontal clipping; handles and expands collapsed search filter panel (`directorySearchToggle`). | Tablet, Mobile<br>`@validation` `@tablet` `@mobile` `@responsive` | `tests/e2e/responsive.spec.ts` | `DirectoryPage.ts` |
+| **TC-UI-06** | **Dashboard** | **FR-DSH-01:** Dashboard Landing URL, Title & Main Widgets Grid | Verifies landing on `/dashboard/index`, Topbar Breadcrumb 'Dashboard', and core widgets rendered. | Desktop<br>`@smoke` `@sanity` `@p0` `@dashboard` | `tests/e2e/dashboard.spec.ts` | `DashboardPage.ts` |
+| **TC-UI-07** | **Dashboard** | **FR-DSH-02:** Quick Launch Shortcut to Assign Leave | Clicking 'Assign Leave' button navigates directly to `/leave/assignLeave` with breadcrumb update. | Desktop<br>`@sanity` `@p1` `@dashboard` `@leave` | `tests/e2e/dashboard.spec.ts` | `DashboardPage.ts` |
+| **TC-UI-08** | **Dashboard** | **FR-DSH-03:** Quick Launch Shortcut to Timesheets | Clicking 'Timesheets' button navigates directly to `/time/` module with breadcrumb update. | Desktop<br>`@sanity` `@p1` `@dashboard` `@time` | `tests/e2e/dashboard.spec.ts` | `DashboardPage.ts` |
+| **TC-UI-36** | **Dashboard** | **FR-DSH-04:** Time at Work Widget Attendance Punch Card State | Verifies 'Time at Work' widget header, stopwatch icon, and attendance action card are rendered. | Desktop<br>`@validation` `@p2` `@dashboard` | `tests/e2e/dashboard.spec.ts` | `DashboardPage.ts` |
+| **TC-UI-37** | **Dashboard** | **FR-DSH-05:** My Actions Widget Pending Items Ledger | Verifies 'My Actions' widget header card and pending action items or empty state container. | Desktop<br>`@validation` `@p2` `@dashboard` | `tests/e2e/dashboard.spec.ts` | `DashboardPage.ts` |
+| **TC-UI-38** | **Dashboard** | **FR-DSH-06:** Employee Distribution Charts Presence | Verifies presence of Sub Unit and Location employee distribution chart cards. | Desktop<br>`@validation` `@p2` `@dashboard` | `tests/e2e/dashboard.spec.ts` | `DashboardPage.ts` |
+| **TC-UI-39** | **Dashboard** | **FR-DSH-07:** Top Navigation Profile Dropdown Menu from Dashboard | Opens topbar profile dropdown from dashboard; verifies About, Support, Change Password, Logout. | Desktop<br>`@sanity` `@p1` `@dashboard` `@auth` | `tests/e2e/dashboard.spec.ts` | `DashboardPage.ts`<br>`Navbar.ts` |
+| **TC-NAV-01 to 12** | **Navigation** | **FR-NAV-01 to 12:** All 12 Sidebar Module Route Transitions & HTTP 200/201 | Validates that clicking each of the 12 sidebar links (Admin, PIM, Leave, Time, Recruitment, My Info, Performance, Dashboard, Directory, Maintenance with secondary password re-auth, Claim, Buzz) transitions URL, renders topbar, and returns HTTP 200/201. | Desktop<br>`@p2` `@navigation` | `tests/e2e/sidebar-navigation.spec.ts` | `Sidebar.ts`<br>`DashboardPage.ts` |
+| **TC-NAV-ALL** | **Navigation** | **FR-NAV-13:** Unified Full Sidebar Navigation Walkthrough | Continuous single-session sequential walkthrough of all 12 modules asserting unbroken session, UI loading, and network 200/201 responses. | Desktop<br>`@p2` `@navigation` `@smoke` | `tests/e2e/sidebar-navigation.spec.ts` | `Sidebar.ts`<br>`DashboardPage.ts` |
 
 ---
 
@@ -434,13 +445,26 @@ Below is the complete cross-reference matrix linking every automated UI, Respons
 
 ---
 
-### 📊 10.4 Test Tagging Metrics & Distribution
+### 📊 10.4 Test Tagging Metrics & Multi-Dimensional Taxonomy
 
-- **`@security`**: **8 high-value security tests** (Auth, Re-Auth Gate, CSRF Rejection, Idempotency, Rate Limiting/429, Forbidden Assets/403, OWASP Headers).
-- **`@smoke`**: **8 critical path tests** (<45s sanity check + 12-module health matrix).
-- **`@sanity`**: **22 core happy-path CRUD & API contract tests**.
-- **`@validation`**: **25 boundary, negative, and input validation tests**.
-- **`@tablet` / `@mobile`**: **7 responsive multi-device tests**.
+The suite uses a **two-dimensional tagging strategy**: by **Execution Priority** and by **Sidebar Module Origin**:
+
+#### 1. Execution Priority Breakdown:
+- **`@p0` (Blocker / Business Critical)**: **12 tests** (Auth gate, employee provisioning, admin data grid, dashboard landing, CSRF protection).
+- **`@p1` (Core Transactional & Workflows)**: **32 tests** (CRUD operations, RBAC isolation, personal details update, leave reports, AJV schema contracts).
+- **`@p2` (Operational / Site-Wide Navigation Health)**: **24 tests** (All 12 sidebar module routes, continuous navigation walkthrough, boundary pagination, burst 429 rate limiting, dashboard widgets).
+- **`@p3` (Social / Auxiliary Widgets)**: **4 tests** (Buzz newsfeed creation, post stream validation).
+
+#### 2. Module Origin Taxonomy (Sidebar Sourced):
+- **`@dashboard`**: **8 tests** (Dashboard landing, quick launch shortcuts, time at work, actions, distribution charts, profile menu).
+- **`@navigation`**: **13 tests** (All 12 individual sidebar module links + continuous 12-module walkthrough).
+- **`@admin`**: **9 tests** (System users table, user provisioning, duplicate collision, role isolation).
+- **`@pim`**: **12 tests** (Employee provisioning, auto/custom IDs, personal details mutation, name search).
+- **`@directory`**: **7 tests** (Card grid, autocomplete search, job title filter, out-of-range offset boundary).
+- **`@auth`**: **8 tests** (UI login, session cookie lifecycle, blank inputs, logout, CSRF token forgery rejection).
+- **`@responsive`**: **3 test suites** (Mobile navigation drawer, dashboard viewport overflow, directory grid fluidity).
+- **`@security`**: **8 tests** (CSRF gate, maintenance password re-auth, idempotency, DoS burst, OWASP headers).
+- **`@leave` / `@time` / `@recruitment` / `@claim` / `@buzz`**: **10 tests** (Microservice API contracts and direct dashboard shortcuts).
 
 ---
 

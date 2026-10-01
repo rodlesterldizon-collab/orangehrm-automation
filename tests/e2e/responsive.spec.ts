@@ -1,7 +1,7 @@
 import { test, expect } from '../../fixtures/page-objects.fixture.js';
 
 test.describe('Responsive Viewport & Mobile Navigation Suite', () => {
-  test('[TC-UI-25] @validation @tablet @mobile — Responsive Topbar & Collapsible Hamburger Navigation Bar', async ({
+  test('[TC-UI-25] @validation @tablet @mobile @p2 @responsive — Responsive Topbar & Collapsible Hamburger Navigation Bar', async ({
     dashboardPage,
     page,
   }) => {
@@ -43,7 +43,7 @@ test.describe('Responsive Viewport & Mobile Navigation Suite', () => {
     }
   });
 
-  test('[TC-UI-26] @validation @tablet @mobile — Dashboard Responsive Layout & Quick Launch Adaptability', async ({
+  test('[TC-UI-26] @validation @tablet @mobile @p2 @responsive — Dashboard Responsive Layout & Quick Launch Adaptability', async ({
     dashboardPage,
     page,
   }) => {
@@ -63,7 +63,7 @@ test.describe('Responsive Viewport & Mobile Navigation Suite', () => {
     await expect(dashboardPage.navbar.logoutLink).toBeVisible();
   });
 
-  test('[TC-UI-27] @validation @tablet @mobile — Directory Card Grid Responsive Viewport Adaptation', async ({
+  test('[TC-UI-27] @validation @tablet @mobile @p2 @responsive — Directory Card Grid Responsive Viewport Adaptation', async ({
     directoryPage,
     page,
   }) => {

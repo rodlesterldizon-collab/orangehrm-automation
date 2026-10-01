@@ -2,7 +2,7 @@ import { test, expect } from '../../fixtures/page-objects.fixture.js';
 import { generateUserData } from '../../utils/test-data.js';
 
 test.describe('Admin User Role & Provisioning Suite', () => {
-  test('[TC-UI-15] @smoke — System Users Table Column Verification', async ({ adminPage }) => {
+  test('[TC-UI-15] @smoke @p0 @admin — System Users Table Column Verification', async ({ adminPage }) => {
     // 1. Assert System Users headers are displayed properly (SS-02)
     await expect(adminPage.tableHeadings).toBeVisible();
     await expect(adminPage.tableHeadings).toContainText('Username');
@@ -13,7 +13,7 @@ test.describe('Admin User Role & Provisioning Suite', () => {
     await expect(adminPage.recordsFoundLabel).toBeVisible();
   });
 
-  test('[TC-UI-16] @sanity — Create New System User (Admin Role)', async ({ adminPage, page }) => {
+  test('[TC-UI-16] @sanity @p1 @admin — Create New System User (Admin Role)', async ({ adminPage, page }) => {
     const userData = generateUserData('Admin');
 
     // 1. Open Add User form
@@ -53,7 +53,7 @@ test.describe('Admin User Role & Provisioning Suite', () => {
     await expect(adminPage.toast).toContainText('Successfully Saved');
   });
 
-  test('[TC-UI-18] @validation — Duplicate Username Rejection', async ({ adminPage }) => {
+  test('[TC-UI-18] @validation @p1 @security @admin — Duplicate Username Rejection', async ({ adminPage }) => {
     // 1. Open Add User form
     await adminPage.addUserButton.click();
     await adminPage.saveUserButton.waitFor({ state: 'visible', timeout: 10000 });
@@ -66,7 +66,7 @@ test.describe('Admin User Role & Provisioning Suite', () => {
     await expect(adminPage.alreadyExistsError).toBeVisible();
   });
 
-  test('[TC-UI-19] @sanity — Filter Users by Role (Admin)', async ({ adminPage, page }) => {
+  test('[TC-UI-19] @sanity @p1 @admin — Filter Users by Role (Admin)', async ({ adminPage, page }) => {
     // 1. Apply filter by User Role "Admin"
     await adminPage.searchUserRoleDropdown.click();
     await page.getByRole('option', { name: 'Admin' }).click();

@@ -7,7 +7,7 @@ test.use({ storageState: { cookies: [], origins: [] } });
 test.describe('Authentication & Session Management Suite', () => {
   const creds = getAdminCredentials();
 
-  test('[TC-UI-01] @smoke @sanity @tablet @mobile — Valid Administrator Login & Responsive Header', async ({ loginPage, page }) => {
+  test('[TC-UI-01] @smoke @sanity @tablet @mobile @auth — Valid Administrator Login & Responsive Header', async ({ loginPage, page }) => {
     // 1. Enter valid credentials and submit
     await loginPage.usernameInput.fill(creds.username);
     await loginPage.passwordInput.fill(creds.password);
@@ -19,7 +19,7 @@ test.describe('Authentication & Session Management Suite', () => {
     await expect(loginPage.navbar.userDropdown).toBeVisible();
   });
 
-  test('[TC-UI-02] @smoke @security @tablet @mobile — Invalid Password Rejection Banner', async ({ loginPage, page }) => {
+  test('[TC-UI-02] @smoke @security @tablet @mobile @auth — Invalid Password Rejection Banner', async ({ loginPage, page }) => {
     // 1. Attempt login with incorrect password
     await loginPage.usernameInput.fill(creds.username);
     await loginPage.passwordInput.fill('InvalidPassword999!');
@@ -31,7 +31,7 @@ test.describe('Authentication & Session Management Suite', () => {
     await expect(page).toHaveURL(/.*\/auth\/login/);
   });
 
-  test('[TC-UI-03] @validation — Blank Input Field Validation Errors', async ({ loginPage }) => {
+  test('[TC-UI-03] @validation @auth — Blank Input Field Validation Errors', async ({ loginPage }) => {
     // 1. Submit with empty inputs
     await loginPage.usernameInput.fill('');
     await loginPage.passwordInput.fill('');
@@ -42,7 +42,7 @@ test.describe('Authentication & Session Management Suite', () => {
     await expect(loginPage.requiredErrorLabels.first()).toHaveText('Required');
   });
 
-  test('[TC-UI-04] @sanity @tablet @mobile — User Logout via Header Dropdown', async ({ dashboardPage, page }) => {
+  test('[TC-UI-04] @sanity @tablet @mobile @auth — User Logout via Header Dropdown', async ({ dashboardPage, page }) => {
     // 1. Use the pre-authenticated dashboard fixture, open profile menu and logout
     await dashboardPage.navbar.userDropdown.click();
     await dashboardPage.navbar.logoutLink.click();

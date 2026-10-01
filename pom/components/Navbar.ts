@@ -18,7 +18,7 @@ export class Navbar {
     this.page = page;
     this.root = this.page.getByRole('banner').or(this.page.locator('header')).first();
     this.container = this.root;
-    this.breadcrumbHeader = this.root.locator('h6').first();
+    this.breadcrumbHeader = this.root.locator('.oxd-topbar-header-breadcrumb, .oxd-topbar-header-title, h6').first();
     this.hamburgerButton = this.root.locator('i').first();
     this.userDropdown = this.root.getByRole('listitem').last();
     this.userDropdownName = this.userDropdown.locator('p, span').first();
@@ -27,5 +27,14 @@ export class Navbar {
     this.aboutLink = this.page.getByRole('menuitem', { name: 'About' });
     this.supportLink = this.page.getByRole('menuitem', { name: 'Support' });
     this.changePasswordLink = this.page.getByRole('menuitem', { name: 'Change Password' });
+  }
+
+  async openUserMenu(): Promise<void> {
+    await this.userDropdown.click();
+  }
+
+  async logout(): Promise<void> {
+    await this.openUserMenu();
+    await this.logoutLink.click();
   }
 }
