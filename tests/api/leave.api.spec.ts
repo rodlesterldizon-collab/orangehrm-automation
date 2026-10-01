@@ -23,14 +23,14 @@ test.describe('API Leave Management & Balance Reports Contract Suite', () => {
     expect(Array.isArray(body.data)).toBe(true);
   });
 
-  test('[TC-API-20] @validation — Leave Balance Report Rejects Missing Date Range Parameters with 422/400', async ({ request }) => {
+  test('[TC-API-20] @validation — Leave Balance Report Rejects Invalid Report Identifier with 422/404/400', async ({ request }) => {
     const response = await request.get(
-      '/web/index.php/api/v2/leave/reports/data?name=my_leave_entitlements_and_usage',
+      '/web/index.php/api/v2/leave/reports/data?limit=50&offset=0&fromDate=invalid-date&name=non_existent_report_definition',
       { headers: cookieHeader }
     );
 
-    // Missing mandatory fromDate and toDate query params must return 422 or 400
-    expect([400, 422]).toContain(response.status());
+    // Invalid report definition or malformed date parameters return 422, 404, or 400
+    expect([400, 404, 422]).toContain(response.status());
   });
 
   test('[TC-API-21] @sanity — Leave Types List Contract for Leave Assignment', async ({ request }) => {

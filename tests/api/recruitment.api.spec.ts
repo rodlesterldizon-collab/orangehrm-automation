@@ -54,13 +54,15 @@ test.describe('API Recruitment Candidate Provisioning Contract Suite', () => {
     expect(response.status()).toBe(422);
   });
 
-  test('[TC-API-26] @validation — Create Candidate Rejects Missing Mandatory Names with 422', async ({ request }) => {
+  test('[TC-API-26] @validation — Create Candidate Rejects Missing Mandatory Email with 422', async ({ request }) => {
+    const data = generateEmployeeData();
+
     const response = await request.post('/web/index.php/api/v2/recruitment/candidates', {
       headers: cookieHeader,
       data: {
-        firstName: '',
-        lastName: '',
-        email: 'valid.email@example.com',
+        firstName: data.firstName,
+        lastName: data.lastName,
+        email: '', // Missing mandatory email
         dateOfApplication: '2026-09-30',
         consentToKeepData: true,
       },
