@@ -20,16 +20,67 @@
 
 > **Submission Requirement:** Another QA engineer must be able to clone your submission and run the suite using only your instructions.
 
-### 📋 Environment & Execution Checklist
-| Requirement Item | Explicit Specification / Command Guide |
+### 📋 Environment & Versions
+| Component | Version / Specification |
 | :--- | :--- |
-| **Versions** | • **Playwright Version:** `v1.62.1` (`@playwright/test: ^1.58.2`)<br>• **Node.js Version:** `v22.23.2` (Fully compatible with Node.js LTS `v20.x` and `v22.x`)<br>• **TypeScript Version:** `v5.9.3`<br>• **AJV Engine:** `v8.17.1` (JSON Schema Draft-07 / Draft-2020-12) |
-| **Install** | **1-Minute Local Setup:**<br>```bash<br># 1. Clone repository and enter directory<br>git clone <repo-url> && cd orangehrm-automation<br><br># 2. Install dependencies<br>npm ci   # or npm install<br><br># 3. Install Playwright browser engines & Linux dependencies<br>npx playwright install --with-deps<br><br># 4. Copy pre-configured environment file (zero secrets required for demo)<br>cp .env.example .env.test<br>``` |
-| **Run (Full Suite)** | **Run Entire Full Test Suite (E2E Regression + REST API + AJV Schema):**<br>```bash<br>npm test<br>``` |
-| **Run (By Target)** | • **Fast Headless REST API & AJV Schema Suite:** `npm run test:api`<br>• **AJV JSON Schema Contract Tests Only:** `npm run test:schema`<br>• **Desktop Chromium E2E Suite:** `npm run test:desktop`<br>• **Desktop Cross-Browser Matrix (Chrome, Edge, Safari):** `npm run test:desktop:all`<br>• **Tablet Viewport Suite (iPad 768x1024):** `npm run test:tablet`<br>• **Mobile Viewport Suite (Pixel 7 393x851):** `npm run test:mobile`<br>• **All 12-Module Sidebar Navigation Health Matrix:** `npm run test:nav`<br>• **Dashboard Widgets & Shortcuts Suite:** `npm run test:dashboard`<br>• **Maintenance Re-Auth & Purge Suite:** `npm run test:maintenance` |
-| **Modes (Execution)** | • **Headless Mode (Default for CI/CD & Fast Local Terminal):** `npm test` or `npx playwright test`<br>• **Headed Mode (Launches Visible Browser Windows):** `npm run test:headed`<br>• **Interactive UI Mode (Visual Time-Travel DOM & Network Timeline):** `npm run test:ui`<br>• **Step-by-Step Interactive Debugger:** `npm run test:debug` |
-| **HTML Reports** | • **Local Execution Report:** `npm run report` *(or open `playwright-report/index.html`)*<br>• **GitHub Actions CI Reports:** Download the `playwright-report-*` artifacts directly from any workflow run summary under the repository's **Actions** tab. |
-| **Limitations & Assumptions** | 1. **Public Demo Shared State & Reset Cycles:** `opensource-demo.orangehrmlive.com` is a live, shared public sandbox subject to periodic database wipes and high worldwide concurrency. Tests generate dynamic, timestamped data (`Faker` + `Date.now()`) with `finally { delete }` cleanup blocks to avoid collisions.<br>2. **Rate Limiting (HTTP 429):** High burst concurrency from parallel runners can trigger server rate limiting; worker concurrency is throttled (`workers: 2`) with built-in retry mechanisms.<br>3. **Network Latency Variance:** Public demo server response times fluctuate between 200ms and 2.5s. All assertions use Playwright web-first auto-waiting with zero hardcoded sleeps (`page.waitForTimeout`).<br>4. **Deactivated SMTP / External Email:** Transactional outbound email notifications (e.g. Leave Approval emails) cannot be validated in an external mailbox because mail servers are disabled on the public demo instance.<br>5. **Upstream Defect on Recruitment:** Submitting an empty candidate email triggers an unhandled `HTTP 500` instead of `422`. Handled with `@fixme` annotation and tolerance `[422, 500]`. |
+| **Playwright Version** | `v1.62.1` (`@playwright/test: ^1.58.2`) |
+| **Node.js Runtime** | `v22.23.2` *(Compatible with Node.js LTS `v20.x` and `v22.x`)* |
+| **TypeScript Engine** | `v5.9.3` |
+| **JSON Schema Validator** | `AJV v8.17.1` *(Draft-07 & Draft-2020-12)* |
+| **Container Image** | `ghcr.io/rodlesterldizon-collab/core-test-suite/test-runner:v1.62.1` |
+
+### 💻 1-Minute Local Setup
+Clone the repository and install all dependencies:
+
+```bash
+# 1. Clone repository and navigate into project directory
+git clone <repo-url> && cd orangehrm-automation
+
+# 2. Install project dependencies
+npm ci
+
+# 3. Install Playwright browser binaries & OS dependencies
+npx playwright install --with-deps
+
+# 4. Initialize local environment config (zero secrets required for public demo)
+cp .env.example .env.test
+```
+
+### 🚀 Test Execution Commands
+
+```bash
+# Run Entire Full Test Suite (E2E Regression + REST API + AJV Schema)
+npm test
+
+# Run by Target Sub-Suite
+npm run test:api          # Headless REST API & Schema Contracts (<15s)
+npm run test:schema       # AJV JSON Schema Contract Tests only
+npm run test:desktop      # Desktop Chromium E2E Suite
+npm run test:desktop:all  # Desktop Cross-Browser Matrix (Chrome, Edge, Safari)
+npm run test:tablet       # Tablet Viewport Suite (iPad 768x1024)
+npm run test:mobile       # Mobile Viewport Suite (Pixel 7 393x851)
+npm run test:nav          # 12-Module Sidebar Navigation Health Matrix
+npm run test:dashboard    # Dashboard Widgets & Shortcuts Suite
+npm run test:maintenance  # Maintenance Re-Auth & Purge Suite
+
+# Execution Modes
+npm test                  # Headless Mode (Default for CI/CD & Fast Terminal)
+npm run test:headed       # Headed Mode (Visible browser windows)
+npm run test:ui           # Interactive UI Mode (Visual Time-Travel & DOM Timeline)
+npm run test:debug        # Step-by-Step Playwright Inspector Debugger
+
+# HTML Reports
+npm run report            # View local HTML test report (or open playwright-report/index.html)
+```
+
+> **GitHub Actions CI Reports:** Download the `playwright-report-*` artifacts directly from any workflow run summary under the repository's **Actions** tab (14-day retention).
+
+### ⚠️ Known Limitations & Operational Assumptions
+1. **Public Demo Shared State & Reset Cycles**: `opensource-demo.orangehrmlive.com` is a live, shared public sandbox subject to periodic database wipes and high worldwide concurrency. Tests generate dynamic, timestamped data (`Faker` + `Date.now()`) with `finally { delete }` cleanup blocks to avoid collisions.
+2. **Rate Limiting (`HTTP 429`)**: High burst concurrency from parallel runners can trigger server rate limiting; worker concurrency is throttled (`workers: 2`) with built-in retry mechanisms.
+3. **Network Latency Variance**: Public demo server response times fluctuate between 200ms and 2.5s. All assertions use Playwright web-first auto-waiting with zero hardcoded sleeps (`page.waitForTimeout`).
+4. **Deactivated SMTP / External Email**: Transactional outbound email notifications (e.g. Leave Approval emails) cannot be validated in an external mailbox because mail servers are disabled on the public demo instance.
+5. **Upstream Defect on Recruitment API**: Submitting an empty candidate email triggers an unhandled `HTTP 500` instead of `422`. Handled with `@fixme` annotation and tolerance `[422, 500]`.
 
 ---
 
