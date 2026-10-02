@@ -25,6 +25,7 @@
     "test:security": "playwright test --grep @security",
     "test:nav": "playwright test tests/e2e/sidebar-navigation.spec.ts --project=desktop-chrome",
     "test:dashboard": "playwright test tests/e2e/dashboard.spec.ts --project=desktop-chrome",
+    "test:maintenance": "playwright test tests/e2e/maintenance.spec.ts --project=desktop-chrome",
     "test:headed": "playwright test --headed",
     "test:ui": "playwright test --ui",
     "test:e2e:ui": "playwright test tests/e2e --ui",

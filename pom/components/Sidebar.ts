@@ -6,9 +6,39 @@ export class Sidebar {
   readonly container: Locator;
   readonly searchInput: Locator;
   readonly sidebarToggle: Locator;
+
+  // Maintenance Administrator Access Password Re-Auth Modal
   readonly adminAccessContainer: Locator;
   readonly adminPasswordInput: Locator;
   readonly adminConfirmButton: Locator;
+
+  // Sidebar Menu Items
+  readonly adminMenuItem: Locator;
+  readonly pimMenuItem: Locator;
+  readonly leaveMenuItem: Locator;
+  readonly timeMenuItem: Locator;
+  readonly recruitmentMenuItem: Locator;
+  readonly myInfoMenuItem: Locator;
+  readonly performanceMenuItem: Locator;
+  readonly dashboardMenuItem: Locator;
+  readonly directoryMenuItem: Locator;
+  readonly maintenanceMenuItem: Locator;
+  readonly claimMenuItem: Locator;
+  readonly buzzMenuItem: Locator;
+
+  // Module Headings / Primary Content Views
+  readonly adminView: Locator;
+  readonly pimView: Locator;
+  readonly leaveView: Locator;
+  readonly timeView: Locator;
+  readonly recruitmentView: Locator;
+  readonly myInfoView: Locator;
+  readonly performanceView: Locator;
+  readonly dashboardView: Locator;
+  readonly directoryView: Locator;
+  readonly maintenanceView: Locator;
+  readonly claimView: Locator;
+  readonly buzzView: Locator;
 
   constructor(page: Page) {
     this.page = page;
@@ -16,15 +46,57 @@ export class Sidebar {
     this.sidebarToggle = this.root.getByRole('navigation', { name: 'Sidepanel' }).getByRole('button');
     this.container = this.root;
     this.searchInput = this.root.getByPlaceholder('Search');
-    
+
     // Maintenance Administrator Access Password Re-Auth Modal
-    this.adminAccessContainer = this.page.locator('.orangehrm-admin-access-container, form').first();
+    this.adminAccessContainer = this.page.locator('form').first();
     this.adminPasswordInput = this.page.locator('input[type="password"]');
     this.adminConfirmButton = this.page.getByRole('button', { name: 'Confirm' }).or(this.page.locator('button[type="submit"]'));
+
+    // Sidebar Menu Items (referencing li.oxd-main-menu-item-wrapper and a.oxd-main-menu-item)
+    this.adminMenuItem = this.root.locator('li a').filter({ hasText: 'Admin' });
+    this.pimMenuItem = this.root.locator('li a').filter({ hasText: 'PIM' });
+    this.leaveMenuItem = this.root.locator('li a').filter({ hasText: 'Leave' });
+    this.timeMenuItem = this.root.locator('li a').filter({ hasText: 'Time' });
+    this.recruitmentMenuItem = this.root.locator('li a').filter({ hasText: 'Recruitment' });
+    this.myInfoMenuItem = this.root.locator('li a').filter({ hasText: 'My Info' });
+    this.performanceMenuItem = this.root.locator('li a').filter({ hasText: 'Performance' });
+    this.dashboardMenuItem = this.root.locator('li a').filter({ hasText: 'Dashboard' });
+    this.directoryMenuItem = this.root.locator('li a').filter({ hasText: 'Directory' });
+    this.maintenanceMenuItem = this.root.locator('li a').filter({ hasText: 'Maintenance' });
+    this.claimMenuItem = this.root.locator('li a').filter({ hasText: 'Claim' });
+    this.buzzMenuItem = this.root.locator('li a').filter({ hasText: 'Buzz' });
+
+    // Module Primary Headings / Views
+    this.adminView = this.page.getByRole('heading', { name: 'User Management' })
+      .or(this.page.locator('h6').filter({ hasText: 'User Management' }));
+    this.pimView = this.page.getByRole('heading', { name: 'PIM' })
+      .or(this.page.locator('h6').filter({ hasText: 'PIM' }));
+    this.leaveView = this.page.getByRole('heading', { name: 'Leave' })
+      .or(this.page.locator('h6').filter({ hasText: 'Leave' }));
+    this.timeView = this.page.getByRole('heading', { name: /Time/i })
+      .or(this.page.locator('h6').filter({ hasText: 'Timesheets' }));
+    this.recruitmentView = this.page.getByRole('heading', { name: 'Recruitment' })
+      .or(this.page.locator('h6').filter({ hasText: 'Recruitment' }));
+    this.myInfoView = this.page.getByRole('heading', { name: 'Personal Details' })
+      .or(this.page.locator('h6').filter({ hasText: 'Personal Details' }));
+    this.performanceView = this.page.getByRole('heading', { name: 'Employee Reviews' })
+      .or(this.page.locator('h5').filter({ hasText: 'Employee Reviews' }));
+    this.dashboardView = this.page.getByRole('heading', { name: 'Dashboard' })
+      .or(this.page.locator('h6').filter({ hasText: 'Dashboard' }));
+    this.directoryView = this.page.getByRole('heading', { name: 'Directory' })
+      .or(this.page.locator('h6').filter({ hasText: 'Directory' }));
+    this.maintenanceView = this.page.getByRole('heading', { name: /Purge Records/i })
+      .or(this.page.locator('h6').filter({ hasText: 'Maintenance' }))
+      .or(this.page.locator('h5').filter({ hasText: 'Administrator Access' }));
+    this.claimView = this.page.getByRole('heading', { name: 'Claim' })
+      .or(this.page.locator('h6').filter({ hasText: 'Claim' }));
+    this.buzzView = this.page.getByRole('heading', { name: 'Buzz' })
+      .or(this.page.locator('h6').filter({ hasText: 'Buzz' }));
   }
 
   getMenuItem(name: string): Locator {
-    return this.root.getByRole('link').filter({ hasText: name });
+    return this.root.locator('li.oxd-main-menu-item-wrapper a').filter({ hasText: name })
+      .or(this.root.getByRole('link').filter({ hasText: name }));
   }
 
   async ensureVisible(): Promise<void> {
@@ -51,36 +123,5 @@ export class Sidebar {
       return true;
     }
     return false;
-  }
-
-  /**
-   * Retrieves the primary content view/container for any sidebar module
-   * to verify that the destination page DOM has rendered successfully.
-   */
-  getModuleView(name: string): Locator {
-    switch (name) {
-      case 'Admin':
-      case 'PIM':
-      case 'Recruitment':
-        return this.page.locator('.oxd-table-filter, .oxd-table').first();
-      case 'Leave':
-      case 'Claim':
-        return this.page.locator('.oxd-table-filter, .oxd-table, .orangehrm-container').first();
-      case 'Time':
-      case 'Performance':
-        return this.page.locator('.orangehrm-card-container, form, .oxd-table-filter').first();
-      case 'My Info':
-        return this.page.locator('.orangehrm-edit-employee, form').first();
-      case 'Dashboard':
-        return this.page.locator('.orangehrm-dashboard-grid, div[class*="dashboard"]').first();
-      case 'Directory':
-        return this.page.locator('.oxd-table-filter, .oxd-grid-4, div[class*="directory"]').first();
-      case 'Maintenance':
-        return this.page.locator('form, .orangehrm-card-container, .orangehrm-admin-access-container').first();
-      case 'Buzz':
-        return this.page.locator('.orangehrm-buzz-newsfeed, div[class*="buzz"]').first();
-      default:
-        return this.page.locator('.orangehrm-card-container, .oxd-table-filter, form').first();
-    }
   }
 }

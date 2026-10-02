@@ -15,7 +15,7 @@ test.describe('Authentication & Session Management Suite', () => {
 
     // 2. Assert redirect to dashboard URL and header presence
     await expect(page).toHaveURL(/.*\/dashboard\/index/);
-    await expect(page.locator('.oxd-topbar-header-breadcrumb')).toContainText('Dashboard');
+    await expect(loginPage.navbar.titleHeader).toContainText('Dashboard');
     await expect(loginPage.navbar.userDropdown).toBeVisible();
   });
 

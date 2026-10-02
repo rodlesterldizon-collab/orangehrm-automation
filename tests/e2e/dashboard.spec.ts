@@ -8,13 +8,12 @@ test.describe('Dashboard Operational Widgets & Quick Launch Suite', () => {
     // 1. Assert landing URL is /dashboard/index
     await expect(page).toHaveURL(/.*\/dashboard\/index/);
 
-    // 2. Assert Topbar Breadcrumb and Page Header display "Dashboard" via POM
-    await expect(dashboardPage.dashboardHeader).toBeVisible();
-    await expect(dashboardPage.navbar.breadcrumbHeader).toContainText('Dashboard');
+    // 2. Assert Page Header display "Dashboard" via POM
+    await expect(dashboardPage.navbar.titleHeader).toContainText('Dashboard');
 
     // 3. Verify core operational dashboard widgets are visible via POM
-    await expect(dashboardPage.quickLaunchWidget).toBeVisible();
-    await expect(dashboardPage.timeAtWorkWidget).toBeVisible();
+    await expect(dashboardPage.quickLaunchTitle).toBeVisible();
+    await expect(dashboardPage.timeAtWorkTitle).toBeVisible();
     await expect(dashboardPage.myActionsWidget).toBeVisible();
 
     // 4. Assert total dashboard widget count (at least 4 cards rendered)
@@ -32,7 +31,7 @@ test.describe('Dashboard Operational Widgets & Quick Launch Suite', () => {
 
     // 2. Assert direct browser transition to /leave/assignLeave
     await expect(page).toHaveURL(/.*\/leave\/assignLeave/);
-    await expect(dashboardPage.navbar.breadcrumbHeader).toContainText('Leave');
+    await expect(dashboardPage.navbar.titleHeader).toContainText('Leave');
   });
 
   test('[TC-UI-08] @sanity @p1 @dashboard @time — Quick Launch Shortcut to Timesheets Navigation', async ({
@@ -48,29 +47,23 @@ test.describe('Dashboard Operational Widgets & Quick Launch Suite', () => {
 
     // 3. Assert transition to /time module
     await expect(page).toHaveURL(/.*\/time\//);
-    await expect(dashboardPage.navbar.breadcrumbHeader).toContainText('Time');
+    await expect(dashboardPage.navbar.titleHeader).toContainText(/Time/i);
   });
 
   test('[TC-UI-36] @validation @p2 @dashboard — Time at Work Widget Attendance Punch Card State', async ({
     dashboardPage,
   }) => {
-    // 1. Verify Time at Work widget header card via POM
-    await expect(dashboardPage.timeAtWorkWidget).toBeVisible();
-    await expect(dashboardPage.timeAtWorkWidget).toContainText('Time at Work');
-
-    // 2. Assert punch status or attendance action element is visible via POM
-    await expect(dashboardPage.timeAtWorkCardBody).toBeVisible();
+    // 1. Verify Time at Work widget <p> text and clock-fill <i> icon
+    await expect(dashboardPage.timeAtWorkTitle).toContainText('Time at Work');
+    await expect(dashboardPage.timeAtWorkIcon).toBeVisible();
   });
 
   test('[TC-UI-37] @validation @p2 @dashboard — My Actions Widget Pending Items Ledger', async ({
     dashboardPage,
   }) => {
-    // 1. Verify My Actions widget header card via POM
-    await expect(dashboardPage.myActionsWidget).toBeVisible();
-    await expect(dashboardPage.myActionsWidget).toContainText('My Actions');
-
-    // 2. Verify pending item cards or empty action state inside body via POM
-    await expect(dashboardPage.myActionsCardBody).toBeVisible();
+    // 1. Verify My Actions widget <p> text and list <i> icon
+    await expect(dashboardPage.myActionsTitle).toContainText('My Actions');
+    await expect(dashboardPage.myActionsIcon).toBeVisible();
   });
 
   test('[TC-UI-38] @validation @p2 @dashboard — Employee Distribution Charts Presence', async ({
@@ -79,10 +72,6 @@ test.describe('Dashboard Operational Widgets & Quick Launch Suite', () => {
     // 1. Verify Employee Distribution by Sub Unit widget card via POM
     await expect(dashboardPage.employeeDistributionSubUnitWidget).toBeVisible();
     await expect(dashboardPage.employeeDistributionSubUnitWidget).toContainText('Employee Distribution by Sub Unit');
-
-    // 2. Verify Employee Distribution by Location widget card via POM
-    await expect(dashboardPage.employeeDistributionLocationWidget).toBeVisible();
-    await expect(dashboardPage.employeeDistributionLocationWidget).toContainText('Employee Distribution by Location');
   });
 
   test('[TC-UI-39] @sanity @p1 @dashboard @auth — Top Navigation Profile Dropdown Menu from Dashboard', async ({

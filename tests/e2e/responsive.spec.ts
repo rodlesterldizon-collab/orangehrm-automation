@@ -7,7 +7,7 @@ test.describe('Responsive Viewport & Mobile Navigation Suite', () => {
   }) => {
     // 1. Verify topbar header is present
     await expect(dashboardPage.navbar.container).toBeVisible();
-    await expect(dashboardPage.navbar.breadcrumbHeader).toBeVisible();
+    await expect(dashboardPage.navbar.titleHeader).toBeVisible();
 
     // 2. Check if running in a responsive viewport (tablet/mobile where hamburger button exists)
     const hamburger = dashboardPage.navbar.hamburgerButton;
@@ -49,7 +49,7 @@ test.describe('Responsive Viewport & Mobile Navigation Suite', () => {
   }) => {
     // 1. Verify dashboard widgets container renders without horizontal overflow
     await expect(dashboardPage.dashboardHeader).toBeVisible();
-    await expect(dashboardPage.quickLaunchWidget).toBeVisible();
+    await expect(dashboardPage.quickLaunchTitle).toBeVisible();
 
     // 2. Verify viewport width does not cause awkward document horizontal scroll
     const hasHorizontalOverflow = await page.evaluate(() => {

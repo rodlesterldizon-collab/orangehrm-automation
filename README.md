@@ -206,6 +206,7 @@ The suite provides dedicated scripts and projects for clean test separation:
 | **REST API & Schema** | Backend Endpoints | `npm run test:api` | Fast headless contract validation (<15s) |
 | **Sidebar Navigation (P2)** | All 12 Modules UI + API | `npm run test:nav` | Validates all 12 sidebar links, HTTP 200 & DOM |
 | **Dashboard Widgets Suite** | Widgets & Shortcuts | `npm run test:dashboard` | Deep UI test of Quick Launch, Time at Work, Charts |
+| **Maintenance Suite** | Purge & Access Records | `npm run test:maintenance` | Admin verification, purge records & download personal data |
 | **AJV Schema Only** | JSON Schemas | `npm run test:schema` | Strict contract validation |
 | **Interactive UI Mode** | Visual Debugger | `npm run test:ui` | Playwright interactive time-travel UI |
 | **HTML Report** | Test Summary | `npm run report` | Opens HTML test report in browser |
@@ -352,6 +353,20 @@ A mature QA automation suite does not just check that "the happy path works" —
 
 ---
 
+### 🧩 Pillar 6: Supplemental Test Strategy & Scope Expansion Justification
+
+To exceed basic assessment requirements and provide robust long-term regression safety, **Supplemental Test Suites** were introduced. These tests expand coverage beyond the initial 4-hour transactional core into operational and platform-wide health:
+
+| Supplemental Suite | Target Files | Priority Tier | Why Selected & Technical Justification | What Happens If Not Covered? |
+| :--- | :--- | :---: | :--- | :--- |
+| **Dashboard Widgets & Shortcuts** | `tests/e2e/dashboard.spec.ts` | **P0/P1/P2** | **Operational Landing**: Post-login landing zone. Validates that Quick Launch buttons directly route to Leave and Timesheets, while Time at Work, My Actions, and charts hydrate properly without manual page reloads. | Broken shortcut routing; broken dashboard analytics; delayed employee actions. |
+| **12-Module Sidebar Health Matrix** | `tests/e2e/sidebar-navigation.spec.ts` | **P2** | **Site-Wide Navigation Health**: Validates that all 12 sidebar modules (Admin, PIM, Leave, Time, Recruitment, My Info, Performance, Dashboard, Directory, Maintenance, Claim, Buzz) load without 404s, return HTTP 200/201, and render expected DOM headings. Ranked as **P2** because it validates route transitions rather than deep transactional mutations. | Undetected broken links, routing regression after microservice deployments, or broken layouts. |
+| **Maintenance Verification & Purge** | `tests/e2e/maintenance.spec.ts` | **P1/P2** | **Intermediary Security Challenge**: Validates OrangeHRM's secondary password prompt on sensitive administrative sub-modules before accessing Purge Employee Records, Access Personal Data, and Purge Candidate Records. | Security bypasses on sensitive data deletion gates; UI freezing during secondary challenge. |
+
+All supplemental tests are strictly mapped to the **Requirements Traceability Matrix (RTM)** below with explicit functional requirements (`FR-DSH-*`, `FR-NAV-*`, `FR-MNT-*`).
+
+---
+
 ## 10. 📋 Requirements Traceability Matrix (RTM) → Test Case Mapping
 
 Below is the complete cross-reference matrix linking every automated UI, Responsive, API, and Schema test to its corresponding **OrangeHRM Functional Requirement (FR)** and **System Specification (SS)**:
@@ -390,6 +405,9 @@ Below is the complete cross-reference matrix linking every automated UI, Respons
 | **TC-UI-39** | **Dashboard** | **FR-DSH-07:** Top Navigation Profile Dropdown Menu from Dashboard | Opens topbar profile dropdown from dashboard; verifies About, Support, Change Password, Logout. | Desktop<br>`@sanity` `@p1` `@dashboard` `@auth` | `tests/e2e/dashboard.spec.ts` | `DashboardPage.ts`<br>`Navbar.ts` |
 | **TC-NAV-01 to 12** | **Navigation** | **FR-NAV-01 to 12:** All 12 Sidebar Module Route Transitions & HTTP 200/201 | Validates that clicking each of the 12 sidebar links (Admin, PIM, Leave, Time, Recruitment, My Info, Performance, Dashboard, Directory, Maintenance with secondary password re-auth, Claim, Buzz) transitions URL, renders topbar, and returns HTTP 200/201. | Desktop<br>`@p2` `@navigation` | `tests/e2e/sidebar-navigation.spec.ts` | `Sidebar.ts`<br>`DashboardPage.ts` |
 | **TC-NAV-ALL** | **Navigation** | **FR-NAV-13:** Unified Full Sidebar Navigation Walkthrough | Continuous single-session sequential walkthrough of all 12 modules asserting unbroken session, UI loading, and network 200/201 responses. | Desktop<br>`@p2` `@navigation` `@smoke` | `tests/e2e/sidebar-navigation.spec.ts` | `Sidebar.ts`<br>`DashboardPage.ts` |
+| **TC-MAINT-01** | **Maintenance** | **FR-MNT-01:** Administrator Verification & Purge Records Landing | Verifies landing on `/maintenance/purgeEmployee`, card container, Purge Employee Records header, and navigation tabs. | Desktop<br>`@smoke` `@p1` `@maintenance` | `tests/e2e/maintenance.spec.ts` | `MaintenancePage.ts` |
+| **TC-MAINT-02** | **Maintenance** | **FR-MNT-02:** Access Records Tab Navigation & Header Update | Clicks Access Records tab; verifies URL transition to `/maintenance/accessEmployeeData` and header 'Download Personal Data'. | Desktop<br>`@sanity` `@p2` `@maintenance` | `tests/e2e/maintenance.spec.ts` | `MaintenancePage.ts` |
+| **TC-MAINT-03** | **Maintenance** | **FR-MNT-03:** Purge Candidate Records Dropdown Navigation | Opens Purge Records dropdown, selects Candidate Records; verifies URL `/maintenance/purgeCandidateData` and header. | Desktop<br>`@sanity` `@p2` `@maintenance` | `tests/e2e/maintenance.spec.ts` | `MaintenancePage.ts` |
 
 ---
 
