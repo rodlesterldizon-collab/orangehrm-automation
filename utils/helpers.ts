@@ -103,6 +103,40 @@ export async function loginProgrammatic(
 }
 
 /**
+ * Programmatic administrator access verification helper:
+ * Checks if the session is challenged by the Administrator Access gate on /maintenance.
+ * If challenged, extracts the CSRF token and submits password verification via API.
+ * This pre-authorizes the session for maintenance pages without any UI waits.
+ */
+export async function verifyAdminAccessProgrammatic(
+  request: APIRequestContext,
+  password?: string
+): Promise<void> {
+  const creds = getAdminCredentials();
+  const pass = password || creds.password;
+
+  try {
+    const res = await request.get('/web/index.php/maintenance/purgeEmployee');
+    const html = await res.text();
+    const tokenMatch = html.match(/:token="&quot;([^&]+)&quot;"/);
+
+    if (tokenMatch) {
+      await request.post('/web/index.php/auth/adminVerify', {
+        form: {
+          _token: tokenMatch[1],
+          password: pass,
+        },
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+        },
+      });
+    }
+  } catch {
+    // If request fails or already authenticated, proceed gracefully
+  }
+}
+
+/**
  * Generates and saves storageState JSON for reusable session state across test suites.
  */
 export async function createAndSaveStorageState(
@@ -113,6 +147,7 @@ export async function createAndSaveStorageState(
   storageStatePath: string = 'playwright/.auth/admin.json'
 ): Promise<string> {
   await loginProgrammatic(context, request, username, password);
+  await verifyAdminAccessProgrammatic(context.request, password);
 
   const dir = path.dirname(storageStatePath);
   if (!fs.existsSync(dir)) {

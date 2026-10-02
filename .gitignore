@@ -34,7 +34,7 @@ dist/
 build/
 coverage/
 
-# AI Studio & Temporary Scaffolding
+# Local Runner & Scaffolding Artifacts
 .aistudio/
 metadata.json
 server.mjs

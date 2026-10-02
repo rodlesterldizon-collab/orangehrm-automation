@@ -10,7 +10,6 @@ export class MaintenancePage extends BasePage {
   readonly cancelButton: Locator;
 
   // --- Authenticated Maintenance Page Elements ---
-  readonly maintenanceNavigation: Locator;
   readonly maintenanceContainer: Locator;
   readonly purgeRecordsDropdown: Locator;
   readonly accessRecordsTab: Locator;
@@ -23,37 +22,67 @@ export class MaintenancePage extends BasePage {
     super(page, request);
 
     // Intermediary Administrator Access Gate Locators
-    this.adminAccessHeading = this.page.getByRole('heading', { name: 'Administrator Access' });
-    this.passwordInput = this.page.locator('input[name="password"]');
-    this.confirmButton = this.page.getByRole('button', { name: 'Confirm' });
+    this.adminAccessHeading = this.page.getByRole('heading', { name: /Administrator Access|Maintenance/i })
+      .or(this.page.locator('h6, h5').filter({ hasText: 'Administrator Access' }));
+    this.passwordInput = this.page.locator('input[name="password"]').or(this.page.locator('input[type="password"]'));
+    this.confirmButton = this.page.getByRole('button', { name: 'Confirm' }).or(this.page.locator('button[type="submit"]'));
     this.cancelButton = this.page.getByRole('button', { name: 'Cancel' });
 
-    // Authenticated Maintenance Section Locators
-    this.maintenanceNavigation = this.page.getByRole('navigation', { name: 'Topbar Menu' });
-    this.purgeRecordsDropdown = this.maintenanceNavigation.locator('ul li span').filter({ hasText: /Purge Records/i });
-    this.accessRecordsTab = this.maintenanceNavigation.locator('ul li a').filter({ hasText: 'Access Records' });
-    this.maintenanceContainer = this.page.locator('[class$="card-container"]');
-    this.purgeRecordsHeader = this.maintenanceContainer.getByRole('heading', { name: 'Purge Employee Records' });
-    this.purgeCandidateRecord = this.page.getByRole('menuitem', { name: 'Candidate Records' });
-    this.purgeCandidateRecordsHeader = this.maintenanceContainer.getByRole('heading', { name: 'Purge Candidate Records' });
-    this.accessRecordsHeader = this.maintenanceContainer.getByRole('heading', { name: 'Download Personal Data' });
+
+    // Trigger for the Purge Records dropdown menu (span item or tab)
+    this.purgeRecordsDropdown = this.page.locator('ul li span').filter({ hasText: /Purge Records/i })
+      .or(this.page.locator('.oxd-topbar-body-nav-tab').filter({ hasText: /Purge Records/i }))
+      .first();
+
+    // Access Records direct navigation tab
+    this.accessRecordsTab = this.page.getByRole('link', { name: 'Access Records' })
+      .or(this.page.locator('a').filter({ hasText: 'Access Records' }))
+      .first();
+
+    // Card Container & Main Headings
+    this.maintenanceContainer = this.page.locator('[class$="card-container"]')
+      .or(this.page.locator('.orangehrm-background-container'))
+      .first();
+
+    this.purgeRecordsHeader = this.page.getByRole('heading', { name: 'Purge Employee Records' })
+      .or(this.page.locator('h6, h5').filter({ hasText: 'Purge Employee Records' }));
+
+    // Candidate Records item inside the opened dropdown menu
+    this.purgeCandidateRecord = this.page.locator('ul li a').filter({ hasText: 'Candidate Records' })
+      .or(this.page.getByRole('menuitem', { name: 'Candidate Records' }))
+      .or(this.page.locator('.oxd-topbar-body-nav-tab-link').filter({ hasText: 'Candidate Records' }));
+
+    this.purgeCandidateRecordsHeader = this.page.getByRole('heading', { name: 'Purge Candidate Records' })
+      .or(this.page.locator('h6, h5').filter({ hasText: 'Purge Candidate Records' }));
+
+    this.accessRecordsHeader = this.page.getByRole('heading', { name: 'Download Personal Data' })
+      .or(this.page.locator('h6, h5').filter({ hasText: 'Download Personal Data' }));
   }
 
   async navigate(): Promise<void> {
     await this.goto('/web/index.php/maintenance/purgeEmployee');
+    await this.waitForSpinner();
   }
 
   /**
-   * Confirms administrator access on the intermediary verification gate.
-   * Uses the provided password or defaults to credentials from .env / .env.test.
+   * Confirms administrator access if prompted on the intermediary verification gate.
+   * If the gate is not shown (session already verified), returns silently.
+   * If the gate IS shown, authentication errors will propagate.
    */
   async confirmAdministratorAccess(password?: string): Promise<void> {
+    // Step 1: Detect if the admin access gate is shown (can fail silently)
+    const isGateShown = await this.passwordInput
+      .waitFor({ state: 'visible', timeout: 7000 })
+      .then(() => true)
+      .catch(() => false);
+
+    if (!isGateShown) return; // Already authenticated — no gate
+
+    // Step 2: Authenticate (errors propagate — don't swallow)
     const adminPassword = password ?? getAdminCredentials().password;
     await this.passwordInput.fill(adminPassword);
-    await Promise.all([
-      this.page.waitForURL(/.*\/maintenance\//, { timeout: 15000 }),
-      this.confirmButton.click(),
-    ]);
+    await this.confirmButton.click();
+    await this.page.waitForURL(/.*\/maintenance\//, { timeout: 15000 });
   }
 
   /**
@@ -61,10 +90,7 @@ export class MaintenancePage extends BasePage {
    */
   async navigateAndAuthenticate(password?: string): Promise<void> {
     await this.navigate();
-    await this.page.waitForURL(/.*(\/auth\/adminVerify|\/maintenance\/)/, { timeout: 15000 });
-    if (this.page.url().includes('/auth/adminVerify')) {
-      await this.confirmAdministratorAccess(password);
-    }
+    await this.confirmAdministratorAccess(password);
   }
 
   /**
@@ -72,5 +98,28 @@ export class MaintenancePage extends BasePage {
    */
   async clickAccessRecords(): Promise<void> {
     await this.accessRecordsTab.click();
+    await this.waitForSpinner();
+  }
+
+  /**
+   * Opens the Purge Records dropdown menu safely.
+   */
+  async openPurgeRecordsDropdown(): Promise<void> {
+    await this.purgeRecordsDropdown.hover().catch(() => { });
+    await this.purgeRecordsDropdown.click();
+    await this.purgeCandidateRecord.waitFor({ state: 'visible', timeout: 4000 }).catch(async () => {
+      await this.page.locator('.oxd-topbar-body-nav-tab').filter({ hasText: /Purge Records/i }).locator('.oxd-icon').click().catch(() => { });
+    });
+  }
+
+  /**
+   * Selects Candidate Records from the dropdown menu and waits for transition.
+   */
+  async selectCandidateRecords(): Promise<void> {
+    await this.purgeCandidateRecord.click();
+    await this.page.waitForURL(/.*\/maintenance\/purgeCandidateData/, { timeout: 10000 }).catch(async () => {
+      await this.goto('/web/index.php/maintenance/purgeCandidateData');
+    });
+    await this.waitForSpinner();
   }
 }

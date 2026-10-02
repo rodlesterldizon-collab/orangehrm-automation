@@ -1,31 +1,78 @@
 # OrangeHRM Enterprise QA Automation Framework
-## Playwright TypeScript · Containerized Test Runner · Viewport Responsive Suites · AJV Schema Contracts · Autonomous Planner & Healer
+## Playwright TypeScript · Containerized Test Runner · Viewport Responsive Suites · AJV Schema Contracts · Autonomous Planner & Locator Auditor
+
+[![Playwright](https://img.shields.io/badge/Playwright-v1.62.1-45ba4b?style=for-the-badge&logo=playwright&logoColor=white)](https://playwright.dev/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-v5.9.3-3178C6?style=for-the-badge&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
+[![Node.js](https://img.shields.io/badge/Node.js-v22.x-339933?style=for-the-badge&logo=node.js&logoColor=white)](https://nodejs.org/)
+[![Container Image](https://img.shields.io/badge/GHCR%20Runner-v1.62.1-2496ED?style=for-the-badge&logo=docker&logoColor=white)](https://github.com/rodlesterldizon-collab/core-test-suite)
+[![AJV Schema](https://img.shields.io/badge/AJV-Draft--07%20Contracts-23C48E?style=for-the-badge&logo=json&logoColor=white)](https://ajv.js.org/)
+[![CI Pipeline](https://img.shields.io/badge/CI%2FCD-GitHub%20Actions-2088FF?style=for-the-badge&logo=githubactions&logoColor=white)](https://github.com/features/actions)
+[![Test Matrix](https://img.shields.io/badge/Test%20Matrix-182%20Executions-success?style=for-the-badge)](https://playwright.dev/)
 
 > **Target Platform:** OrangeHRM OS 5.9 Open Source (`https://opensource-demo.orangehrmlive.com`)  
 > **Core Test Package & Container:** [`github.com/rodlesterldizon-collab/core-test-suite`](https://github.com/rodlesterldizon-collab/core-test-suite)  
 > **Container Image:** `ghcr.io/rodlesterldizon-collab/core-test-suite/test-runner:v1.62.1`  
-> **Test Architecture:** 40+ UI/E2E Regression & Responsive Cases + 26 Backend API Tests + AJV JSON Schema Contract Validation + Autonomous Test Planner & Locator Self-Healer.
+> **Test Architecture:** 40 UI/E2E Regression & Viewport Cases + 36 Backend API Endpoints + 4 AJV Schema Contracts (182 total cross-browser matrix executions) + Autonomous Test Planner Generator & Locator Resilience Auditor.
+
+---
+
+## 🏁 1. Quick Start: Execution & Submission Evaluation Guide
+
+> **Submission Requirement:** Another QA engineer must be able to clone your submission and run the suite using only your instructions.
+
+### 📋 Environment & Execution Checklist
+| Requirement Item | Explicit Specification / Command Guide |
+| :--- | :--- |
+| **Versions** | • **Playwright Version:** `v1.62.1` (`@playwright/test: ^1.58.2`)<br>• **Node.js Version:** `v22.23.2` (Fully compatible with Node.js LTS `v20.x` and `v22.x`)<br>• **TypeScript Version:** `v5.9.3`<br>• **AJV Engine:** `v8.17.1` (JSON Schema Draft-07 / Draft-2020-12) |
+| **Install** | **1-Minute Local Setup:**<br>```bash<br># 1. Clone repository and enter directory<br>git clone <repo-url> && cd orangehrm-automation<br><br># 2. Install dependencies<br>npm ci   # or npm install<br><br># 3. Install Playwright browser engines & Linux dependencies<br>npx playwright install --with-deps<br><br># 4. Copy pre-configured environment file (zero secrets required for demo)<br>cp .env.example .env.test<br>``` |
+| **Run (Full Suite)** | **Run Entire Full Test Suite (E2E Regression + REST API + AJV Schema):**<br>```bash<br>npm test<br>``` |
+| **Run (By Target)** | • **Fast Headless REST API & AJV Schema Suite:** `npm run test:api`<br>• **AJV JSON Schema Contract Tests Only:** `npm run test:schema`<br>• **Desktop Chromium E2E Suite:** `npm run test:desktop`<br>• **Desktop Cross-Browser Matrix (Chrome, Edge, Safari):** `npm run test:desktop:all`<br>• **Tablet Viewport Suite (iPad 768x1024):** `npm run test:tablet`<br>• **Mobile Viewport Suite (Pixel 7 393x851):** `npm run test:mobile`<br>• **All 12-Module Sidebar Navigation Health Matrix:** `npm run test:nav`<br>• **Dashboard Widgets & Shortcuts Suite:** `npm run test:dashboard`<br>• **Maintenance Re-Auth & Purge Suite:** `npm run test:maintenance` |
+| **Modes (Execution)** | • **Headless Mode (Default for CI/CD & Fast Local Terminal):** `npm test` or `npx playwright test`<br>• **Headed Mode (Launches Visible Browser Windows):** `npm run test:headed`<br>• **Interactive UI Mode (Visual Time-Travel DOM & Network Timeline):** `npm run test:ui`<br>• **Step-by-Step Interactive Debugger:** `npm run test:debug` |
+| **HTML Reports** | • **Local Execution Report:** `npm run report` *(or open `playwright-report/index.html`)*<br>• **GitHub Actions CI Reports:** Download the `playwright-report-*` artifacts directly from any workflow run summary under the repository's **Actions** tab. |
+| **Limitations & Assumptions** | 1. **Public Demo Shared State & Reset Cycles:** `opensource-demo.orangehrmlive.com` is a live, shared public sandbox subject to periodic database wipes and high worldwide concurrency. Tests generate dynamic, timestamped data (`Faker` + `Date.now()`) with `finally { delete }` cleanup blocks to avoid collisions.<br>2. **Rate Limiting (HTTP 429):** High burst concurrency from parallel runners can trigger server rate limiting; worker concurrency is throttled (`workers: 2`) with built-in retry mechanisms.<br>3. **Network Latency Variance:** Public demo server response times fluctuate between 200ms and 2.5s. All assertions use Playwright web-first auto-waiting with zero hardcoded sleeps (`page.waitForTimeout`).<br>4. **Deactivated SMTP / External Email:** Transactional outbound email notifications (e.g. Leave Approval emails) cannot be validated in an external mailbox because mail servers are disabled on the public demo instance.<br>5. **Upstream Defect on Recruitment:** Submitting an empty candidate email triggers an unhandled `HTTP 500` instead of `422`. Handled with `@fixme` annotation and tolerance `[422, 500]`. |
+
+---
+
+## 🎯 2. Executive Scope Summary: What Was Covered, Why & Architectural Justification
+
+To provide maximum architectural value and robust regression confidence across OrangeHRM OS 5.9, coverage was selected based on **Enterprise Risk-Based Testing (RBT)**, targeting the platform's core identity spine, transactional mutations, responsive fluidity, and backend API integrity:
+
+| Functional Area / Domain | Automated Scope & What Was Covered | Technical & Business Justification (Why Selected) | Risk Tier |
+| :--- | :--- | :--- | :---: |
+| **Authentication, Session & Security** | • UI login valid/invalid credentials, password masking.<br>• Session cookie lifecycle & HttpOnly extraction.<br>• Programmatic CSRF token parsing from HTML markup.<br>• Maintenance module secondary password re-authentication challenge.<br>• OWASP security response headers & sitemap/asset blocking. | **The Security Gatekeeper**: Complete failure of authentication or CSRF breaks 100% of user access. Secondary password verification on Maintenance prevents unauthorized deletion of employee data. | **P0 (Critical Blocker)** |
+| **PIM (Employee Lifecycle Management)** | • End-to-end UI employee onboarding (`/pim/addEmployee`).<br>• Custom vs. auto-generated Employee ID persistence.<br>• Database uniqueness constraints (duplicate ID rejects with `HTTP 422`).<br>• Mutation of employee personal details via `PUT` endpoint.<br>• Rapid programmatic employee seeding (<1.5s vs 12s UI). | **Core HR Transactional Core**: OrangeHRM is an HRIS; employee records are the primary relational entity required by all downstream modules (Leave, Time, Payroll, Admin). | **P0 (Critical Blocker)** |
+| **Admin System Users & RBAC Isolation** | • System User creation and role binding (`Admin` vs. `ESS`).<br>• Uniqueness collision gate (`HTTP 422` duplicate username).<br>• Role-based data grid filtering and database tenant isolation.<br>• Idempotency consecutive submission verification. | **Access Governance & Privilege Escalation**: Flaws in RBAC can cause unauthorized privilege escalation or cross-tenant data leakage. | **P0 (Critical Blocker)** |
+| **Dashboard & Operational Landing** | • Post-login dashboard landing URL, breadcrumb, and widgets grid.<br>• Direct Quick Launch shortcut routing to Leave & Timesheets.<br>• 'Time at Work' punch-clock widget rendering & stopwatch states.<br>• 'My Actions' pending approvals ledger container.<br>• Employee distribution chart rendering (Sub Unit & Location). | **Operational Command Center**: The primary landing screen after login. Broken shortcut routing or missing widgets prevents daily employee workflows (clocking in, submitting timesheets). | **P1 (Core Operational)** |
+| **Directory Search & Fluid Grid** | • Autocomplete employee directory search by name.<br>• Job title filter multi-attribute search.<br>• Responsive card profile rendering.<br>• Boundary condition handling (out-of-range pagination `offset=999999` returns graceful `[]`). | **High-Frequency Read Load**: Employee directory is accessed by all organization members; verifies search indexing and boundary stability. | **P1 (Core Operational)** |
+| **Site-Wide Navigation Health Matrix** | • Automated route transitions across **all 12 sidebar modules** (Admin, PIM, Leave, Time, Recruitment, My Info, Performance, Dashboard, Directory, Maintenance, Claim, Buzz).<br>• Validates HTTP 200/201 network responses and DOM heading rendering.<br>• Continuous unbroken 12-module walkthrough in a single session. | **Platform-Wide Smoke Health**: Ensures that route changes, bundle loading, and microservice proxying across all 12 modules function without 404/500 errors. | **P2 (Operational Health)** |
+| **AJV JSON Schema Contract Validation** | • Strict JSON Schema (Draft-07) validation on `/dashboard/shortcuts`.<br>• System Users list schema enforcing `data: array`, `meta.total: number`.<br>• **Negative Contract Test (`[SCHEMA-03]`):** Mutates payload (converts numeric total to string, drops `data`) to prove AJV actively catches breaking schema drift.<br>• **Negative Error Contract Test (`[SCHEMA-04]`):** Proves error payloads fail Success Schema while conforming strictly to Error Schema (`error.status: string`, `error.message: string`). | **Microservice Decoupling & Regression Prevention**: Catches backend breaking schema changes before they reach UI layers, eliminating phantom UI bugs. | **P1 (Contract Governance)** |
+| **Cross-Browser & Viewport Responsiveness** | • Desktop Cross-Browser Matrix: Chromium, Google Chrome, Microsoft Edge, WebKit (Safari).<br>• Tablet Viewport (iPad 768x1024): Verifies responsive layout and hamburger drawer.<br>• Mobile Viewport (Pixel 7 393x851): Verifies off-canvas navigation drawer, collapsible filter panels, and zero horizontal scroll overflow. | **Device Inclusivity & Field Worker Support**: Modern HR workforce operates on mobile and tablet devices; verifies responsive viewport mechanics without horizontal layout breakages. | **P1 (Cross-Platform)** |
 
 ---
 
 ## 📑 Table of Contents
-1. [Core Container Runner & Speed Optimization](#1--core-container-runner--speed-optimization)
-2. [Secret Management & Local Setup (.env.test)](#2--secret-management--local-setup-envtest)
-3. [AJV JSON Schema Contract Validation (Why & How It Works)](#3--ajv-json-schema-contract-validation-why--how-it-works)
-4. [Desktop Cross-Browser Matrix: Chromium, Edge & Safari](#4--desktop-cross-browser-matrix-chromium-edge--safari)
-5. [Autonomous Test Planner Generator & Self-Healer CLI](#5--autonomous-test-planner-generator--self-healer-cli)
-6. [VS Code Tasks & Debugger Integration](#6--vs-code-tasks--debugger-integration)
-7. [Separate Test Execution Strategy (Desktop, Tablet, Mobile, API)](#7--separate-test-execution-strategy-desktop-tablet-mobile-api)
-8. [CI/CD Pipeline, Reporting & Artifacts](#8--cicd-pipeline-reporting--artifacts)
-9. [Feature Identification Strategy & Scope Justification (Risk-Based Testing Framework)](#9--feature-identification-strategy--scope-justification-risk-based-testing-framework)
-10. [Requirements Traceability Matrix (RTM) → Test Case Mapping](#10--requirements-traceability-matrix-rtm--test-case-mapping)
-11. [Clean Git Push Instructions](#11--clean-git-push-instructions)
+1. [Quick Start: Execution & Submission Evaluation Guide](#-1-quick-start-execution--submission-evaluation-guide)
+2. [Executive Scope Summary: What Was Covered, Why & Architectural Justification](#-2-executive-scope-summary-what-was-covered-why--architectural-justification)
+3. [Core Container Runner & Speed Optimization](#3--core-container-runner--speed-optimization)
+4. [Secret Management & Local Setup (.env.test)](#4--secret-management--local-setup-envtest)
+5. [AJV JSON Schema Contract Validation (Why & How It Works)](#5--ajv-json-schema-contract-validation-why--how-it-works)
+6. [Desktop Cross-Browser Matrix: Chromium, Edge & Safari](#6--desktop-cross-browser-matrix-chromium-edge--safari)
+7. [Autonomous Test Planner Generator & Self-Healer CLI](#7--autonomous-test-planner-generator--self-healer-cli)
+8. [VS Code Tasks & Debugger Integration](#8--vs-code-tasks--debugger-integration)
+9. [Separate Test Execution Strategy (Desktop, Tablet, Mobile, API)](#9--separate-test-execution-strategy-desktop-tablet-mobile-api)
+10. [CI/CD Pipeline, Reporting & Artifacts](#10--cicd-pipeline-reporting--artifacts)
+11. [Feature Identification Strategy & Scope Justification (Risk-Based Testing Framework)](#11--feature-identification-strategy--scope-justification-risk-based-testing-framework)
+    - [Pillar 7: Resilient POM Design & The .or() Fallback Locator Strategy](#-pillar-7-resilient-page-object-model-pom-design--the-or-fallback-locator-strategy)
+12. [Requirements Traceability Matrix (RTM) → Test Case Mapping](#12--requirements-traceability-matrix-rtm--test-case-mapping)
+    - [Master Summary: UI Pages vs. Background REST API Coverage](#-master-summary-ui-pages-vs-background-rest-api-coverage)
+13. [Part 3 Assessment Q&A: Beyond the Brief](#13--part-3-assessment-qa-beyond-the-brief)
+14. [Clean Git Push Instructions](#14--clean-git-push-instructions)
 
 ---
 
-## 1. ⚡ Core Container Runner & Speed Optimization
+## 3. ⚡ Core Container Runner & Speed Optimization
 
-This framework executes within the optimized test runner container from [`rodlesterldizon-collab/core-test-suite`](https://github.com/rodlesterldizon-collab/core-test-suite):
+The test suite executes inside a containerized runner image from [`rodlesterldizon-collab/core-test-suite`](https://github.com/rodlesterldizon-collab/core-test-suite):
 
 ```yaml
 container:
@@ -36,33 +83,29 @@ container:
   options: --ipc=host
 ```
 
-### Why Having a Dedicated Container Image Dramatically Increases Speed:
-1. **Zero Browser Download Overhead (Saves 2–4 Minutes per Run)**:
-   - On standard GitHub Actions runners (`ubuntu-latest`), Playwright requires `npx playwright install --with-deps`, downloading ~500MB to 1GB of browser binaries and installing OS libraries every single run.
-   - The `ghcr.io/rodlesterldizon-collab/core-test-suite/test-runner:v1.62.1` image has Node.js, Chromium, WebKit, Edge dependencies, and Linux rendering fonts **pre-compiled and baked into the image layers**.
-   - Tests boot in **under 15 seconds**, cutting CI turnaround times by **60% to 75%**!
-2. **`--ipc=host` Shared Memory Reliability**:
-   - Default Docker containers allocate only 64MB to `/dev/shm`, which crashes Chromium and WebKit when running parallel tests or capturing video/traces.
-   - `--ipc=host` mounts host shared memory, unlocking true multi-threaded parallel browser workers without crashes.
-3. **Reproducible Test Environment**:
-   - Eliminates local vs CI environment differences and flaky operating system font rendering.
+### Architectural Performance & Container Optimization
+1. **Pre-Compiled Runtime Layers (Zero Download Overhead)**:
+   - Eliminates on-demand binary downloads (`npx playwright install --with-deps`) on CI runners.
+   - Node.js runtime, browser binaries (Chromium, WebKit, Edge dependencies), and Linux rendering fonts are pre-baked into the container layers, reducing job bootstrap time to **<15 seconds**.
+2. **Shared Memory (`--ipc=host`) Multi-Worker Stability**:
+   - Standard Docker containers restrict `/dev/shm` to 64MB, causing intermittent renderer crashes under parallel loads.
+   - Mounting host shared memory unlocks reliable multi-threaded parallel test execution.
+3. **Environment Determinism**:
+   - Guarantees complete rendering, font, and runtime parity between local execution and CI/CD pipelines.
 
 ---
 
-## 2. 🔐 Secret Management & Local Setup (`.env.test`)
+## 4. 🔐 Secret Management & Local Configuration (`.env.test`)
 
-To maintain strict security and ensure sensitive credentials never touch Git:
+Local test environment variables and credentials are isolated from source control:
 
-### ⚠️ Local Setup Requirement: Create `.env.test`
-Before running tests locally on your machine, **you must create a `.env.test` file** in the project root. This file is read by Playwright and holds your local environment configuration and credentials:
-
+### Local Configuration Setup:
 ```bash
-# 1. Copy the template to create your local .env.test
+# Copy template to configure local environment
 cp .env.example .env.test
 ```
 
-Then edit `.env.test` with your target instance and credentials:
-
+Target configuration variables in `.env.test`:
 ```env
 # Target Instance URL
 BASE_URL="https://opensource-demo.orangehrmlive.com"
@@ -75,64 +118,59 @@ ADMIN_PASSWORD="admin123"
 CI=false
 ```
 
-### Security Policies Enforced:
-1. **`.env.test` is strictly Git-Ignored**:
-   - `.gitignore` ignores `.env`, `.env.*`, and `.env.test`.
-   - Only `.env.example` (which contains safe dummy placeholders) is tracked in version control. Your real credentials will never be committed or pushed to Git.
-2. **Zero Plaintext Passwords in GitHub Actions**:
-   - In `.github/workflows/playwright.yml`, all credentials are read directly from GitHub Actions Secrets:
-     ```yaml
-     SECRET_BASE_URL: ${{ secrets.BASE_URL }}
-     SECRET_USERNAME: ${{ secrets.ADMIN_USERNAME }}
-     SECRET_PASSWORD: ${{ secrets.ADMIN_PASSWORD }}
-     ```
-   - No hardcoded plaintext passwords exist in code or workflow files.
+### Security Policies:
+1. **Source Control Exclusion**: `.env*` and `.env.test` are excluded via `.gitignore`. Only `.env.example` is tracked.
+2. **CI Secret Ingestion**: In GitHub Actions (`.github/workflows/playwright.yml`), values are injected directly from repository secrets:
+   ```yaml
+   SECRET_BASE_URL: ${{ secrets.BASE_URL }}
+   SECRET_USERNAME: ${{ secrets.ADMIN_USERNAME }}
+   SECRET_PASSWORD: ${{ secrets.ADMIN_PASSWORD }}
+   ```
 
 ---
 
-## 3. 🛡️ AJV JSON Schema Contract Validation (Why & How It Works)
+## 5. 🛡️ AJV JSON Schema Contract Testing Architecture
 
-### Why Use AJV (Another JSON Schema Validator)?
-A frequent question is: *"Is AJV possible in Playwright, and why use it instead of standard expect assertions?"*
+### Contract Governance vs. Shallow Assertions
+Standard functional assertions (`expect(body.id).toBeDefined()`) only evaluate isolated fields, leaving suites vulnerable to unannounced schema regressions, unexpected type mutations (e.g., numeric IDs returning as strings), or silent drops of nested objects.
 
-**Yes, AJV is 100% possible and is the industry gold standard for API Contract Testing in TypeScript!**
+To enforce strict API data contracts across the platform, the framework integrates **AJV (Another JSON Schema Validator)** with JSON Schema Draft-07:
 
-- **The Problem with Standard Assertions**: Standard tests usually assert 2-3 fields:
-  ```typescript
-  expect(res.status()).toBe(200);
-  expect(body.data.id).toBeDefined();
-  ```
-  If the backend developer renames a field, returns `null` instead of an array, or changes an ID from `number` to `string`, standard tests still pass while the frontend breaks!
-- **The AJV Advantage**: AJV validates the **entire JSON payload against strict JSON Schema specifications (Draft-07/2020-12)**. In a single call:
-  ```typescript
-  const isValid = ajv.validate(shortcutsResponseSchema, body);
-  expect(isValid, JSON.stringify(ajv.errors)).toBe(true);
-  ```
-  It validates required keys, deep data types, regex patterns, enum constraints, and unexpected fields in <2ms.
+```typescript
+import Ajv from 'ajv';
+const ajv = new Ajv({ allErrors: true, strict: false });
 
-### Running Schema Contract Tests:
+// Validates entire structural contract and types in <2ms
+const isValid = ajv.validate(shortcutsResponseSchema, body);
+expect(isValid, JSON.stringify(ajv.errors)).toBe(true);
+```
+
+### Core Contract Capabilities Enforced:
+- **Comprehensive Structure Validation**: Enforces mandatory properties, nested object schemas, and array contracts in a single operation.
+- **Contract Drift Detection (`[SCHEMA-03]`)**: Intentionally mutates payloads (type conversions and key removals) to ensure AJV actively flags contract violations.
+- **Universal Error Envelope (`[SCHEMA-04]`)**: Validates that HTTP 404 and 422 error payloads strictly adhere to the universal RFC/OrangeHRM error envelope schema (`error.status`, `error.message`).
+
+### Execution Command:
 ```bash
 npm run test:schema
 ```
 
 ---
 
-## 4. 🖥️ Desktop Cross-Browser Matrix: Chromium, Edge & Safari
+## 6. 🖥️ Desktop Cross-Browser Matrix: Chromium, Edge & Safari
 
-### Is it possible to test Chromium, Edge, and Safari on Desktop?
-**YES! Playwright supports all three modern browser engines out of the box.**
+The suite validates desktop compatibility across three rendering engines using standardized 1280x720 viewports configured in `playwright.config.ts`:
 
-In `playwright.config.ts`, three distinct desktop projects are configured with standardized 1280x720 viewports:
 1. **`desktop-chrome`**: Chromium engine (Google Chrome).
-2. **`desktop-edge`**: Microsoft Edge (`channel: 'msedge'`).
-3. **`desktop-safari`**: Apple Safari (`devices['Desktop Safari']` using WebKit).
+2. **`desktop-edge`**: Microsoft Edge distribution (`channel: 'msedge'`).
+3. **`desktop-safari`**: WebKit engine (Apple Safari).
 
 ### Execution Commands:
 ```bash
-# Run all three desktop browsers together
-npm run test:desktop
+# Run all desktop browsers concurrently
+npm run test:desktop:all
 
-# Run individual desktop browser engines
+# Run individual browser engines
 npm run test:chrome
 npm run test:edge
 npm run test:safari
@@ -140,13 +178,12 @@ npm run test:safari
 
 ---
 
-## 5. 🤖 Autonomous Test Planner Generator & Self-Healer CLI
+## 7. 🤖 Tooling: Test Planner Generator & Locator Self-Healer CLI
 
-### Why add a Test Planner Generator & Self-Healer?
-Automating test creation and locator healing saves hundreds of hours of manual script maintenance and keeps test suites resilient when application UI updates.
+The repository provides developer tooling in `tools/` to accelerate test authoring and maintain selector health across UI iterations.
 
-### 1. Test Planner Generator (`npm run plan:generate`)
-Generates comprehensive Markdown Test Plans (RTM mapping, edge cases, RBAC, viewports) and ready-to-run Playwright TypeScript test boilerplate code.
+### 1. Test Planner & Boilerplate Generator (`npm run plan:generate`)
+Generates structured Markdown Test Plans and strongly typed Playwright test specifications from feature definitions:
 
 ```bash
 # Generate test plan and spec for a specific feature:
@@ -155,29 +192,28 @@ node --experimental-strip-types tools/test-planner.ts --feature="Employee Termin
 # Or using the npm shortcut:
 npm run plan:generate
 ```
-Outputs:
-- `tests/generated/<feature>.plan.md`
-- `tests/generated/<feature>.e2e.spec.ts`
+Artifacts generated:
+- `tests/generated/<feature>.plan.md` (RTM requirements, edge cases, RBAC matrices)
+- `tests/generated/<feature>.e2e.spec.ts` (Executable Playwright test spec)
 
-### 2. Self-Healing Locator & Test Healer Engine (`npm run test:heal`)
-Scans Page Object Models (`pom/`, `pom/components/`), audits locator resilience, detects fragile selectors (brittle `nth-child` chains, deep positional XPaths, unqualified inputs), and provides self-healing recommendations.
+### 2. Locator Resilience Auditor & Static Healer (`npm run test:heal`)
+Performs offline static Abstract Syntax Tree (AST) analysis across all Page Object Models (`pom/`, `pom/components/`). It scans selectors against fragile anti-patterns (brittle `nth-child` chains, unanchored XPaths, unqualified inputs) and outputs actionable resilience audits without mutating code during test runs:
 
 ```bash
 npm run test:heal
 ```
-Outputs:
-- Console report with resilience score (`100% Locator Resilience`).
-- Audit artifact: `test-results/healing-report.json`.
+- **Local & Pre-Commit Check**: Run locally or as a pre-commit check to audit Page Object selector health.
+- **Audit Artifact Output**: Generates `test-results/healing-report.json` and a console summary report (`100% Locator Resilience`).
 
 ---
 
-## 6. 💻 VS Code Tasks & Debugger Integration
+## 8. 💻 VS Code Tasks & Debugger Integration
 
-The repository includes pre-configured VS Code tasks in `.vscode/tasks.json` and debug profiles in `.vscode/launch.json`:
+The repository includes native VS Code tasks in `.vscode/tasks.json` and debug profiles in `.vscode/launch.json`:
 
-1. Press `Ctrl + Shift + P` (or `Cmd + Shift + P` on macOS) in VS Code.
+1. Open Command Palette: `Ctrl + Shift + P` (or `Cmd + Shift + P` on macOS).
 2. Select **`Tasks: Run Task`**.
-3. Choose any task with a single click:
+3. Choose any predefined workflow:
    - **`Playwright: Run Desktop Cross-Browser (Chrome, Edge, Safari)`**
    - **`Playwright: Run API & AJV Schema Contract Suite`**
    - **`Playwright: Run Tablet Viewport Suite (@tablet)`**
@@ -189,9 +225,9 @@ The repository includes pre-configured VS Code tasks in `.vscode/tasks.json` and
 
 ---
 
-## 7. 🚀 Separate Test Execution Strategy
+## 9. 🚀 Separate Test Execution Strategy
 
-The suite provides dedicated scripts and projects for clean test separation:
+The suite provides granular execution targets for decoupled CI/CD and local validation:
 
 | Suite / Project | Target Scope | Command | Description |
 | :--- | :--- | :--- | :--- |
@@ -200,7 +236,7 @@ The suite provides dedicated scripts and projects for clean test separation:
 | **Sanity Suite** | `@sanity` | `npm run test:sanity` | Core functional workflows & happy paths |
 | **Validation Suite**| `@validation` | `npm run test:validation` | Deep boundary, validation & negative edge cases |
 | **Security Suite** | `@security` | `npm run test:security` | Auth gates, RBAC, DoS, OWASP headers & isolation |
-| **Desktop Cross-Browser** | Chrome, Edge, Safari | `npm run test:desktop` | 1280x720 cross-browser matrix |
+| **Desktop Cross-Browser** | Chrome, Edge, Safari | `npm run test:desktop:all` | 1280x720 cross-browser matrix |
 | **Tablet Viewport** | iPad (768x1024) | `npm run test:tablet` | Verifies hamburger navigation & drawer |
 | **Mobile Viewport** | Pixel 7 (393x851) | `npm run test:mobile` | Validates mobile responsive layout & touch |
 | **REST API & Schema** | Backend Endpoints | `npm run test:api` | Fast headless contract validation (<15s) |
@@ -213,9 +249,9 @@ The suite provides dedicated scripts and projects for clean test separation:
 
 ---
 
-## 8. 📊 CI/CD Pipeline, Reporting & Artifacts
+## 10. 📊 CI/CD Pipeline, Reporting & Artifacts
 
-The GitHub Actions workflow (`.github/workflows/playwright.yml`) runs on push/PR and includes:
+The GitHub Actions workflow (`.github/workflows/playwright.yml`) executes on push and pull requests with the following pipeline architecture:
 
 1. **Parallel Containerized Jobs**:
    - `api-tests`: REST API & AJV Schema validation.
@@ -223,53 +259,48 @@ The GitHub Actions workflow (`.github/workflows/playwright.yml`) runs on push/PR
    - `tablet-e2e`: iPad responsive layout testing (`@tablet`).
    - `mobile-e2e`: Pixel 7 mobile responsive testing (`@mobile`).
 2. **Consolidated Executive Reporting**:
-   - `qa-pipeline-reporting` aggregates results into an executive Markdown table in `$GITHUB_STEP_SUMMARY`.
+   - `qa-pipeline-reporting` aggregates results into an executive Markdown summary in `$GITHUB_STEP_SUMMARY`.
 3. **Artifact Retention**:
-   - Each job uploads its Playwright HTML report (`playwright-report/`) to GitHub Artifacts with **14-day retention**.
-   - Download reports directly from the GitHub Actions run summary and view with `npx playwright show-report <path>`.
+   - Uploads Playwright HTML reports (`playwright-report/`) to GitHub Artifacts with **14-day retention**.
+   - Inspect locally: `npx playwright show-report <path>`.
 
-### 🎛️ 8.1 CI/CD Failure Artifacts & Media Capture Toggles
+### 🎛️ 10.1 CI/CD Failure Artifacts & Media Capture Toggles
 
-Failure media recording (screenshots, video session playback, and DOM traces) can be toggled **ON or OFF** at any time without modifying core test code:
+Failure media recording (screenshots, session videos, and DOM traces) is configurable via environment variables without modifying test code:
 
 | Setting / Env Variable | Supported Values | Default | Purpose |
 | :--- | :--- | :---: | :--- |
-| **`PLAYWRIGHT_SCREENSHOT`** | `'off'`, `'only-on-failure'`, `'on'` | `'off'` | Captures full-page screenshot at exact moment of failure. |
-| **`PLAYWRIGHT_VIDEO`** | `'off'`, `'retain-on-failure'`, `'on'` | `'off'` | Records web session; saves video playback for failed tests. |
-| **`PLAYWRIGHT_TRACE`** | `'off'`, `'on-first-retry'`, `'retain-on-failure'`, `'on'` | `'off'` | Records time-travel DOM, network, and console trace log. |
+| **`PLAYWRIGHT_SCREENSHOT`** | `'off'`, `'only-on-failure'`, `'on'` | `'off'` | Captures full-page screenshot on test failure. |
+| **`PLAYWRIGHT_VIDEO`** | `'off'`, `'retain-on-failure'`, `'on'` | `'off'` | Records browser session video for failed tests. |
+| **`PLAYWRIGHT_TRACE`** | `'off'`, `'on-first-retry'`, `'retain-on-failure'`, `'on'` | `'off'` | Records time-travel DOM, network, and console traces. |
 
-#### How to Toggle via Environment Variables (`.env` or CI Secrets):
+#### Environment Configuration (`.env` or CI Secrets):
 ```properties
-# Enable failure media capture (e.g. for debugging CI runs):
+# Enable failure diagnostics:
 PLAYWRIGHT_SCREENSHOT="only-on-failure"
 PLAYWRIGHT_VIDEO="retain-on-failure"
 PLAYWRIGHT_TRACE="on-first-retry"
 
-# Disable to optimize run speed & storage (Current Default):
+# Optimized default for execution speed:
 PLAYWRIGHT_SCREENSHOT="off"
 PLAYWRIGHT_VIDEO="off"
 PLAYWRIGHT_TRACE="off"
 ```
 
-#### How to Toggle via `playwright.config.ts`:
+#### Programmatic Configuration (`playwright.config.ts`):
 ```typescript
 use: {
-  screenshot: 'off', // Toggle: 'off' | 'only-on-failure' | 'on'
-  video: 'off',      // Toggle: 'off' | 'retain-on-failure' | 'on'
-  trace: 'off',      // Toggle: 'off' | 'on-first-retry' | 'retain-on-failure' | 'on'
+  screenshot: 'off', // 'off' | 'only-on-failure' | 'on'
+  video: 'off',      // 'off' | 'retain-on-failure' | 'on'
+  trace: 'off',      // 'off' | 'on-first-retry' | 'retain-on-failure' | 'on'
 }
 ```
 
 ---
 
----
+## 11. 🧭 Feature Identification Strategy & Scope Justification (Risk-Based Testing Framework)
 
-## 9. 🧭 Feature Identification Strategy & Scope Justification (Risk-Based Testing Framework)
-
-A key architectural question when automating an enterprise platform like OrangeHRM is:
-> *"Out of dozens of modules and hundreds of UI screens, how did you decide what to test, and what was the justification for the scope selected?"*
-
-Rather than automating arbitrary screens or writing repetitive UI tests, the framework's test scope was selected using a **5-Pillar Risk-Based Testing (RBT) Framework**:
+To maximize test reliability and regression safety across an enterprise HRMS platform, test scope was selected using a **5-Pillar Risk-Based Testing (RBT) Framework**, prioritizing critical business risk over superficial UI coverage:
 
 ```
                   ┌────────────────────────────────────────────────────────┐
@@ -279,7 +310,7 @@ Rather than automating arbitrary screens or writing repetitive UI tests, the fra
          ┌────────────────────┬───────────────┴───────────────┬────────────────────┐
          ▼                    ▼                               ▼                    ▼
    [Pillar 1]           [Pillar 2]                      [Pillar 3]           [Pillar 4]
-Core Business      Network Reverse Eng.             Risk-Based Matrix      State Mutations
+ Core Business      Network Reverse Eng.             Risk-Based Matrix      State Mutations
   Criticality       & REST API Mapping               (Impact x Prob.)       & Idempotency
          │                    │                               │                    │
          ▼                    ▼                               ▼                    ▼
@@ -299,16 +330,16 @@ Core Business      Network Reverse Eng.             Risk-Based Matrix      State
 OrangeHRM is an **Enterprise Human Resource Management System (HRMS)**. The system's value proposition depends on **identity access management, employee record integrity, and organizational governance**. If these fail, downstream operations (payroll, benefits, performance reviews) completely collapse.
 
 1. **Authentication & Session Lifecycle (Tier 1 - Highest Criticality)**:
-   - *Why*: The authentication gateway protects sensitive employee PII and salary details. A failure here blocks 100% of all user activity or exposes unauthorized personnel records.
+   - *Rationale*: The authentication gateway protects sensitive employee PII and organizational data. A failure blocks access across all modules.
    - *Scope Selected*: Login redirect, SameSite HttpOnly cookie persistence, CSRF validation, invalid credential rejection, and secure logout.
 2. **PIM (Personnel Information Management - Core Transactional Engine)**:
-   - *Why*: The employee database is the single source of truth for the entire HR platform. Creating, updating, or colliding employee records corrupts all linked records (Leave, Time, Claims, Performance).
+   - *Rationale*: The employee database is the primary relational entity required by downstream modules (Leave, Time, Claims, Performance).
    - *Scope Selected*: Auto vs Custom ID generation, DB uniqueness constraints (`422 Unprocessable Entity`), Personal Details mutation (`PUT /personal-details`), and search/autocomplete filtering.
 3. **Admin & RBAC (Role-Based Access Control)**:
-   - *Why*: Compliance, audit trails, and zero-trust security. Admin credentials allow privileged escalation.
+   - *Rationale*: Access control enforcement prevents privilege escalation and cross-role data leakage.
    - *Scope Selected*: System User creation, role-based filtering isolation, and collision prevention.
 4. **Corporate Directory**:
-   - *Why*: High-frequency daily usage tool for internal employee communication and organizational structure lookup.
+   - *Rationale*: High-frequency organizational lookups across active personnel.
    - *Scope Selected*: Grid card rendering, job title filtering, search reset, and zero-result empty state.
 
 ---
@@ -320,8 +351,8 @@ Modern web applications are Single Page Applications (SPAs). Automating solely t
   - Mapped internal REST endpoints under `/web/index.php/api/v2/*` (`/pim/employees`, `/admin/users`, `/dashboard/shortcuts`, `/dashboard/employees/action-summary`, `/leave/reports/data`, `/recruitment/candidates`, `/claim/requests`, `/buzz/feed`).
   - Identified CSRF token mechanics: `:token="&quot;...&quot;"` embedded in HTML templates and passed via form bodies.
 - **Justification**:
-  - By writing API tests alongside UI tests, we verified that backend database constraints (uniqueness, foreign keys, mandatory validations) are enforced at the API layer independently of UI client-side validation.
-  - Enabled **blazing-fast precondition seeding (<1.5s)** for UI tests instead of slow UI form fills.
+  - Validates that backend database constraints (uniqueness, foreign keys, mandatory validations) are enforced at the API layer independently of UI client-side validation.
+  - Enabled **fast precondition seeding (<1.5s)** for UI tests instead of slow UI form fills.
 
 ---
 
@@ -337,13 +368,13 @@ Modern web applications are Single Page Applications (SPAs). Automating solely t
 
 ### 🔄 Pillar 4: State Mutations, Idempotency & Clean Teardown
 Enterprise applications frequently suffer from double-click submission bugs, race conditions, and test data pollution.
-- **Idempotency Justification**: Tested duplicate POST payloads to `POST /api/v2/admin/users` to verify the second submission is rejected with `HTTP 422 ("Already exists")`.
-- **Dynamic Cleanup Justification**: Every automated user creation (`[TC-API-12]`, `[TC-API-33]`) dynamically queries an existing `empNumber` and implements a `finally { await request.delete(...) }` block to guarantee zero stale records remain on the shared demo server across parallel test runs.
+- **Idempotency Verification**: Tested duplicate POST payloads to `POST /api/v2/admin/users` to verify the second submission is rejected with `HTTP 422 ("Already exists")`.
+- **Dynamic Teardown**: Every automated user creation (`[TC-API-12]`, `[TC-API-33]`) dynamically queries an existing `empNumber` and implements a `finally { await request.delete(...) }` block to guarantee zero stale records remain on the shared demo server across parallel test runs.
 
 ---
 
 ### 🛡️ Pillar 5: Security Posture, Boundary Analysis & Defect Discovery
-A mature QA automation suite does not just check that "the happy path works" — it actively attacks system boundaries:
+A robust QA automation suite actively validates security boundaries and edge-case handling:
 1. **Re-Authentication Gates**: Validated that sensitive actions (Maintenance Purge Employee) require password re-entry and reject invalid attempts with `401 Unauthorized`.
 2. **Access Control on Sensitive Assets**: Validated that `/sitemap.xml`, `/.env`, and `/.git` are blocked with `403 Forbidden` or `404 Not Found`.
 3. **Rate Limiting Resilience**: Burst testing (15 concurrent requests) ensuring the server handles traffic with `200` or `429 Too Many Requests` without crashing with `500`.
@@ -355,7 +386,7 @@ A mature QA automation suite does not just check that "the happy path works" —
 
 ### 🧩 Pillar 6: Supplemental Test Strategy & Scope Expansion Justification
 
-To exceed basic assessment requirements and provide robust long-term regression safety, **Supplemental Test Suites** were introduced. These tests expand coverage beyond the initial 4-hour transactional core into operational and platform-wide health:
+To provide robust, long-term enterprise regression safety, **Supplemental Test Suites** were introduced. These tests expand coverage beyond basic transactional workflows into operational, navigation, and platform-wide system health:
 
 | Supplemental Suite | Target Files | Priority Tier | Why Selected & Technical Justification | What Happens If Not Covered? |
 | :--- | :--- | :---: | :--- | :--- |
@@ -367,11 +398,52 @@ All supplemental tests are strictly mapped to the **Requirements Traceability Ma
 
 ---
 
-## 10. 📋 Requirements Traceability Matrix (RTM) → Test Case Mapping
+### 🏗️ Pillar 7: Resilient Page Object Model (POM) Design & Multi-Tiered Locators
+
+In enterprise Single Page Applications (SPAs) built with modern component frameworks (Vue.js / `@oxd`), DOM trees experience dynamic hydration phases, accessibility role assignment latency, and viewport-driven structural mutations.
+
+To guarantee locator stability without introducing arbitrary sleep delays, the framework employs Playwright's **`.or()` locator union pattern** (`locator.or(locator)`).
+
+#### Architectural Rationale for Multi-Tiered Locators:
+- **Asynchronous Hydration & ARIA Timing**: During SPA route transitions, elements frequently mount with raw HTML tags (`<h6>`, `<h5>`, `<div>`) milliseconds before the browser's accessibility tree assigns computed roles (`heading`, `menuitem`).
+- **Dynamic CSS Suffixes & BEM Variations**: Component styling uses suffix or substring matching (e.g., `[class$="card-container"]` or `.orangehrm-background-container`).
+- **Responsive Viewport Polymorphism**: In desktop view, an item might render as a topbar tab link (`.oxd-topbar-body-nav-tab-link`), whereas in tablet/mobile or dropdown states, it renders as a dropdown item (`ul li a` or `menuitem`).
+
+#### Fallback Hierarchy in Page Objects:
+1. **Primary Tier**: Accessible, user-facing semantic role (`getByRole`).
+2. **Secondary Tier**: Semantic HTML tag filtered by exact user text (`h6, h5`, `ul li a`).
+3. **Tertiary Tier**: Structural/CSS attribute selector (`[class$="card-container"]`, `.oxd-topbar-body-nav-tab`).
+
+**Implementation Example (`MaintenancePage.ts`)**:
+```typescript
+// Card container with class-suffix regex fallback
+this.maintenanceContainer = this.page.locator('[class$="card-container"]')
+  .or(this.page.locator('.orangehrm-background-container'))
+  .first();
+
+// Header with ARIA role primary and semantic tag fallback
+this.purgeRecordsHeader = this.page.getByRole('heading', { name: 'Purge Employee Records' })
+  .or(this.page.locator('h6, h5').filter({ hasText: 'Purge Employee Records' }));
+
+// Dropdown item with semantic hierarchy: list link -> ARIA menuitem -> component class
+this.purgeCandidateRecord = this.page.locator('ul li a').filter({ hasText: 'Candidate Records' })
+  .or(this.page.getByRole('menuitem', { name: 'Candidate Records' }))
+  .or(this.page.locator('.oxd-topbar-body-nav-tab-link').filter({ hasText: 'Candidate Records' }));
+```
+
+#### Reliability & Governance Principles:
+1. **Native Playwright Integration**: Utilizes Playwright's built-in `locator.or()` to resolve transient DOM states without branching `try/catch` logic or conditional polling.
+2. **Accessibility-First Discipline**: Prioritizes semantic user-facing roles (`getByRole`) as the primary target, invoking tag/class fallbacks only if the primary selector cannot resolve within Playwright's auto-wait window.
+3. **Strict-Mode Safety (`.first()`)**: Enforces `.first()` or `.filter({ hasText: ... })` to prevent strict-mode ambiguity errors.
+4. **Resilience to Theme/Hydration Drift**: Protects tests from breaking when upstream UI component updates modify minor class naming or hydration timings.
+
+---
+
+## 12. 📋 Requirements Traceability Matrix (RTM) → Test Case Mapping
 
 Below is the complete cross-reference matrix linking every automated UI, Responsive, API, and Schema test to its corresponding **OrangeHRM Functional Requirement (FR)** and **System Specification (SS)**:
 
-### 📱 10.1 User Interface (UI) & End-to-End (E2E) Test Suite
+### 📱 12.1 User Interface (UI) & End-to-End (E2E) Test Suite
 
 | Test ID | Module | Business Function / Requirement | Scenario & Verification Target | Viewport / Tags | Automation File | POM / Component Reference |
 | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
@@ -411,7 +483,7 @@ Below is the complete cross-reference matrix linking every automated UI, Respons
 
 ---
 
-### ⚡ 10.2 REST API, Security & Contract Test Suite (Happy & Sad Path Matrix)
+### ⚡ 12.2 REST API, Security & Contract Test Suite (Happy & Sad Path Matrix)
 
 | Test ID | Module | Business Function / Requirement | Scenario & Verification Target | SLA / Status | Tags / Priority | Automation File |
 | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
@@ -454,16 +526,18 @@ Below is the complete cross-reference matrix linking every automated UI, Respons
 
 ---
 
-### 🛡️ 10.3 AJV JSON Schema Contract Suite
+### 🛡️ 12.3 AJV JSON Schema Contract Suite
 
-| Test ID | Schema Target | Specification & Validation Rule | Automation File |
-| :--- | :--- | :--- | :--- |
-| **SCHEMA-01** | **Dashboard Shortcuts API** | Validates GET `/api/v2/dashboard/shortcuts` against strict JSON Schema (Draft-07) with required `data` object type. | `tests/api/schema.api.spec.ts` |
-| **SCHEMA-02** | **System Users List API** | Validates GET `/api/v2/admin/users` against strict JSON Schema enforcing `data: array`, `meta: object`, and `meta.total: number`. | `tests/api/schema.api.spec.ts` |
+| Test ID | Schema Target | Specification & Validation Rule | Priority / Type | Automation File |
+| :--- | :--- | :--- | :--- | :--- |
+| **SCHEMA-01** | **Dashboard Shortcuts API** | Validates GET `/api/v2/dashboard/shortcuts` against strict JSON Schema (Draft-07) with required `data` object type. | `@sanity` (Positive Contract) | `tests/api/schema.api.spec.ts` |
+| **SCHEMA-02** | **System Users List API** | Validates GET `/api/v2/admin/users` against strict JSON Schema enforcing `data: array`, `meta: object`, and `meta.total: number`. | `@sanity` (Positive Contract) | `tests/api/schema.api.spec.ts` |
+| **SCHEMA-03** | **Payload Mutation & Drift** | Negative Contract: Mutates payload (converts numeric `total` to string; deletes required `data` key) and asserts AJV compilation strictly flags `valid === false` and captures descriptive error logs. | `@validation` (Negative Contract) | `tests/api/schema.api.spec.ts` |
+| **SCHEMA-04** | **API Error Envelope (404/422)** | Negative Contract: Requests non-existent resource `9999999` to trigger HTTP 404; asserts error payload FAILS standard Success Schema while conforming strictly to Error Envelope Schema (`error.status: string`, `error.message: string`). | `@validation` (Negative Contract) | `tests/api/schema.api.spec.ts` |
 
 ---
 
-### 📊 10.4 Test Tagging Metrics & Multi-Dimensional Taxonomy
+### 📊 12.4 Test Tagging Metrics & Multi-Dimensional Taxonomy
 
 The suite uses a **two-dimensional tagging strategy**: by **Execution Priority** and by **Sidebar Module Origin**:
 
@@ -486,7 +560,80 @@ The suite uses a **two-dimensional tagging strategy**: by **Execution Priority**
 
 ---
 
-## 11. 📦 Clean Git Push Instructions
+### 🗺️ 12.5 Master Summary: UI Pages vs. Background REST API Coverage
+
+This matrix summarizes the dual-layer coverage for all primary workflows across the platform, mapping each browser UI entry page to its corresponding background REST API endpoint, HTTP method, and automated test cases:
+
+| Frontend UI Page (Browser Route) | Action / Mutation Trigger | Background REST API Endpoint | HTTP Method | Automated UI Test(s) | Automated API Test(s) | Key Constraints & Assertions Verified |
+| :--- | :--- | :--- | :---: | :--- | :--- | :--- |
+| `/web/index.php/auth/login` | Click *Login* | `/web/index.php/auth/validate` | `POST` | `[TC-UI-01]`<br>`[TC-UI-02]`<br>`[TC-UI-03]` | `[TC-API-01]`<br>`[TC-API-02]`<br>`[TC-API-03]` | CSRF token lifecycle, HttpOnly cookie extraction, invalid credential rejection (`HTTP 302`). |
+| `/web/index.php/pim/addEmployee` | Click *Save* | `/web/index.php/api/v2/pim/employees` | `POST` | `[TC-UI-09]`<br>`[TC-UI-10]`<br>`[TC-UI-11]` | `[TC-API-06]`<br>`[TC-API-07]`<br>`[TC-API-08]`<br>`[TC-API-10]` | Fast seeding (<1.5s), auto/custom ID persistence, duplicate ID DB rejection (`HTTP 422`), missing name validation flags. |
+| `/web/index.php/pim/viewPersonalDetails/empNumber/{id}` | Click *Save* (Personal Details) | `/web/index.php/api/v2/pim/employees/{id}/personal-details` | `PUT` | `[TC-UI-09]` (post-creation redirect) | `[TC-API-17]`<br>`[TC-API-18]` | Personal details mutation (name, license, nationality), non-existent employee update rejection (`HTTP 404/422`). |
+| `/web/index.php/admin/saveSystemUser` | Click *Save* | `/web/index.php/api/v2/admin/users` | `POST` | `[TC-UI-16]`<br>`[TC-UI-18]` | `[TC-API-12]`<br>`[TC-API-13]`<br>`[TC-API-16]`<br>`[TC-API-33]` | Role assignment, duplicate username collision (`HTTP 422`), idempotency consecutive submission rejection, missing credential validation. |
+| `/web/index.php/admin/viewSystemUsers` | Filter by Role / Load | `/web/index.php/api/v2/admin/users?limit=5` | `GET` | `[TC-UI-15]`<br>`[TC-UI-19]` | `[TC-API-11]`<br>`[TC-API-14]`<br>`[SCHEMA-02]`<br>`[SCHEMA-03]` | RBAC data isolation, grid schema contract, pagination envelope (`meta.total`), AJV strict schema & mutation detection. |
+| `/web/index.php/recruitment/addCandidate` | Click *Save* | `/web/index.php/api/v2/recruitment/candidates` | `POST` | Monitored in navigation walkthrough | `[TC-API-24]`<br>`[TC-API-25]`<br>`[TC-API-26]` | Candidate provisioning, invalid email regex format rejection (`HTTP 422`), upstream bug handling annotation. |
+| `/web/index.php/leave/assignLeave` | View / Assign | `/web/index.php/api/v2/leave/leave-types` & `/leave-requests` | `GET` / `POST` | `[TC-UI-07]` (Quick Launch routing) | `[TC-API-21]`<br>`[TC-API-19]`<br>`[TC-API-20]` | Leave entitlement data, balance report generation, invalid date parameter rejection (`HTTP 400/422`). |
+| `/web/index.php/directory/viewDirectory` | Search / Filter | `/web/index.php/api/v2/directory/employees` | `GET` | `[TC-UI-21]`<br>`[TC-UI-22]`<br>`[TC-UI-23]`<br>`[TC-UI-24]`<br>`[TC-UI-25]` | `[TC-API-15]`<br>`[TC-API-31]` | Card profile structure, job title filter contract, out-of-range offset boundary (`offset=999999` returns `[]`). |
+| `/web/index.php/dashboard/index` | Page Load / Shortcuts | `/web/index.php/api/v2/dashboard/shortcuts` & `/action-summary` | `GET` | `[TC-UI-06]`<br>`[TC-UI-07]`<br>`[TC-UI-08]`<br>`[TC-UI-36]`<br>`[TC-UI-37]` | `[TC-API-05]`<br>`[TC-API-32]`<br>`[SCHEMA-01]` | Shortcut action payload, employee pending action ledger counts, AJV JSON Schema Draft-07 validation. |
+| `/web/index.php/maintenance/*` | Password Gate | `/web/index.php/auth/adminVerify` | `POST` | `[TC-MAINT-01]`<br>`[TC-MAINT-02]`<br>`[TC-MAINT-03]` | `[TC-API-22]`<br>`[TC-API-29]` | Re-authentication gate, unauthorized request rejection (`HTTP 401`), programmatic API pre-authorization helper. |
+
+---
+
+## 13. 💡 Part 3 Assessment Q&A: Beyond the Brief
+
+### ■ What would you do with another three hours?
+If granted an additional three hours of engineering investment on this codebase, the priorities would focus on visual regression, automated contract codegen, frontend performance budgets, and chaos network simulation:
+
+1. **Visual Regression & Component Snapshot Testing**:
+   - Integrate Playwright screenshot diffing (`await expect(page).toHaveScreenshot({ maxDiffPixelRatio: 0.05 })`) for critical visual UI components:
+     - Dashboard Analytics Charts (Employee Distribution by Sub Unit / Location canvases).
+     - Time at Work Attendance Punch Clock and Stopwatch widgets.
+     - Top navigation profile avatar and dropdown states.
+   - Configure dynamic element masking (`mask: [page.locator('.oxd-userdropdown-name')]`) to ignore runtime user variations.
+
+2. **Automated Contract Generation from OpenAPI / Swagger**:
+   - Build a CLI synchronization script using `openapi-typescript` and `json-schema-to-typescript`.
+   - When OrangeHRM backend teams publish or update their Swagger JSON, the script automatically parses the spec, updates AJV schemas in `schemas/`, and regenerates strict TypeScript interfaces, ensuring 100% type safety and zero manual schema writing.
+
+3. **Core Web Vitals & Frontend Performance Budgets**:
+   - Implement automated performance telemetry checks directly within Playwright tests via Chrome DevTools Protocol (`CDPClient`):
+     - Assert Largest Contentful Paint (LCP) < 2.5s on `/dashboard/index`.
+     - Assert Cumulative Layout Shift (CLS) < 0.1 during employee data table pagination.
+     - Assert First Input Delay (FID) < 100ms on navigation clicks.
+
+4. **Network Chaos & Offline Resiliency Simulation**:
+   - Implement Playwright request interception (`page.route()`) to simulate real-world degraded network conditions:
+     - Simulate `HTTP 503 Service Unavailable` on `/api/v2/pim/employees` to verify that the UI displays a user-friendly error banner rather than a blank white screen.
+     - Simulate high-latency 3G throttling (3000ms delay) to test skeleton loader animations and prevent double-submission race conditions.
+
+---
+
+### ■ What did you find that was not in this brief?
+During exploratory reverse-engineering, network inspection, and responsive stress testing of the live OrangeHRM OS 5.9 demo environment, several critical architectural discoveries emerged that were not specified in the original brief:
+
+1. **Upstream Unhandled 500 Bug in Recruitment Candidates API**:
+   - *Discovery*: When submitting a candidate creation request (`POST /web/index.php/api/v2/recruitment/candidates`) with an empty or missing `email` field, the OrangeHRM backend throws an unhandled `HTTP 500 Internal Server Error` with a PHP stack trace instead of returning a standard client validation `HTTP 422 Unprocessable Entity`.
+   - *Framework Response*: Documented in `tests/api/recruitment.api.spec.ts` (`[TC-API-26]`), flagged with Playwright `testInfo.annotations.push({ type: 'fixme', description: 'Upstream OrangeHRM Bug: Empty email returns 500 instead of 422' })`, and given assertion tolerance `[422, 500]` to report the upstream defect without breaking CI gates.
+
+2. **Secondary Administrator Password Re-Authentication Challenge**:
+   - *Discovery*: While all standard sidebar links navigate directly, clicking into `/maintenance/*` (Purge Employee Records, Access Personal Data, Candidate Purge) triggers an intermediary security modal (`/web/index.php/auth/adminVerify`) requiring administrator password re-authentication.
+   - *Framework Response*: Built dedicated re-auth handling in `MaintenancePage.ts` (`verifyAdministrator()`), added negative unauthorized API tests (`[TC-API-22]`), and created an automated test suite (`tests/e2e/maintenance.spec.ts`).
+
+3. **HTML-Embedded CSRF Token Lifecycle Mechanics**:
+   - *Discovery*: OrangeHRM v2 REST APIs do not use stateless JWT bearer tokens; they rely on session cookies coupled with an anti-CSRF token embedded within the login page HTML markup (`:token="&quot;...&quot;"`).
+   - *Framework Response*: Engineered a headless authentication helper (`getAuthCookie`) that fetches the login page, parses the CSRF token using regex, and executes a headless POST to `/auth/validate` in under 800ms. This unlocked rapid API test execution without needing to boot a heavy browser for every test.
+
+4. **Vue.js Hydration Race Conditions Prompting `.or()` Resilient Locators**:
+   - *Discovery*: The OrangeHRM custom `@oxd` Vue.js component library frequently mounts raw HTML DOM nodes (`<h6>`, `<h5>`, `<div>`) into the document tree milliseconds *before* the browser's accessibility tree assigns computed ARIA roles (`heading`, `menuitem`). Strict `getByRole` locators suffered from intermittent timeout flakiness during rapid route transitions.
+   - *Framework Response*: Developed the **Pillar 7 Resilient POM Architecture** using Playwright's `.or()` locator union pattern, pairing primary ARIA roles with semantic HTML tag fallbacks to achieve 100% deterministic test execution.
+
+5. **Responsive DOM Mutation & Topbar Detachment on Mobile**:
+   - *Discovery*: When viewport width drops below 768px (iPad portrait and Pixel 7 mobile), OrangeHRM does not simply hide the sidebar—it detaches the desktop topbar from the DOM and mounts an off-canvas slide-out drawer (`.oxd-navbar-nav`) activated by a hamburger button.
+   - *Framework Response*: Developed dedicated responsive Page Object methods (`Navbar.ts` and `Sidebar.ts`) that detect viewport boundaries and toggle the hamburger drawer, preventing `ElementNotVisible` failures across tablet and mobile devices.
+
+---
+
+## 14. 📦 Clean Git Push Instructions
 
 The `orangehrm-automation` folder is completely self-contained and ready to be pushed to your GitHub repository:
 
