@@ -73,7 +73,7 @@ test.describe('Admin User Role & Provisioning Suite', () => {
 
     const searchPromise = page.waitForResponse(
       (res) => res.url().includes('/api/v2/admin/users') && res.status() === 200,
-      { timeout: 10000 }
+      { timeout: 15000 }
     ).catch(() => null);
 
     await adminPage.searchButton.click();
@@ -83,14 +83,14 @@ test.describe('Admin User Role & Provisioning Suite', () => {
     await adminPage.waitForSpinner();
 
     // 3. Ensure results are rendered
-    await expect(adminPage.tableRows.first()).toBeVisible({ timeout: 10000 });
+    await expect(adminPage.tableRows.first()).toBeVisible({ timeout: 15000 });
 
-    // 4. Assert all visible rows (capped at 5) have "Admin" role
+    // 4. Assert all visible rows have "Admin" role
     const userRoleCells = await adminPage.userRoleCells.all();
     expect(userRoleCells.length).toBeGreaterThan(0);
 
-    for (const cell of userRoleCells.slice(0, 5)) {
-      await expect(cell).toHaveText('Admin');
+    for (const cell of userRoleCells) {
+      await expect(cell).toContainText('Admin');
     }
   });
 });

@@ -55,12 +55,12 @@ export class AdminPage extends BasePage {
     this.resetButton = this.filterContainer.getByRole('button', { name: 'Reset' });
     this.recordsFoundLabel = page.locator('span').filter({ hasText: /Records? Found/i }).first();
 
-    // 3. Table & Row Scoping
-    this.tableHeadings = page.locator('div[role="rowgroup"]').first();
-    this.table = page.locator('div[role="rowgroup"]');
-    this.tableRows = this.table.locator('div[role="row"]');
-    this.userRoleCells = this.table.locator('div[class$="-cell"]').nth(2)
-      .or(this.tableRows.locator('.oxd-table-cell:nth-child(3)'));
+    // 3. Table & Row Scoping (scoped to table body to exclude header row)
+    this.tableHeadings = page.locator('.oxd-table-header').or(page.locator('div[role="rowgroup"]').first());
+    this.table = page.locator('.oxd-table-body').or(page.locator('div[role="rowgroup"]').last());
+    this.tableRows = this.table.locator('.oxd-table-card').or(this.table.locator('div[role="row"]'));
+    this.userRoleCells = this.tableRows.locator('.oxd-table-cell:nth-child(3)')
+      .or(this.tableRows.locator('div[role="cell"]:nth-child(3)'));
 
     // 4. Add User Form Fields (scoped inside userFormContainer)
     this.userRoleSelect = this.userFormContainer.locator('i').first()

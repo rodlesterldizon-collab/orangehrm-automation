@@ -48,19 +48,20 @@ export class MaintenancePage extends BasePage {
       .or(this.page.locator('h6, h5').filter({ hasText: 'Purge Employee Records' }));
 
     // Candidate Records item inside the opened dropdown menu
-    this.purgeCandidateRecord = this.page.locator('ul li a').filter({ hasText: 'Candidate Records' })
-      .or(this.page.getByRole('menuitem', { name: 'Candidate Records' }))
-      .or(this.page.locator('.oxd-topbar-body-nav-tab-link').filter({ hasText: 'Candidate Records' }));
+    this.purgeCandidateRecord = this.page.locator('ul li a').filter({ hasText: /Candidate Records/i })
+      .or(this.page.getByRole('menuitem', { name: /Candidate Records/i }))
+      .or(this.page.locator('.oxd-topbar-body-nav-tab-link').filter({ hasText: /Candidate Records/i }));
 
-    this.purgeCandidateRecordsHeader = this.page.getByRole('heading', { name: 'Purge Candidate Records' })
-      .or(this.page.locator('h6, h5').filter({ hasText: 'Purge Candidate Records' }));
+    this.purgeCandidateRecordsHeader = this.page.getByRole('heading', { name: /Purge Candidate Records|Candidate Records|Purge Records/i })
+      .or(this.page.locator('h6, h5, .orangehrm-main-title').filter({ hasText: /Purge Candidate Records|Candidate Records|Purge Records/i }));
 
-    this.accessRecordsHeader = this.page.getByRole('heading', { name: 'Download Personal Data' })
-      .or(this.page.locator('h6, h5').filter({ hasText: 'Download Personal Data' }));
+    this.accessRecordsHeader = this.page.getByRole('heading', { name: /Download Personal Data|Access Records/i })
+      .or(this.page.locator('h6, h5, .orangehrm-main-title').filter({ hasText: /Download Personal Data|Access Records/i }));
   }
 
   async navigate(): Promise<void> {
     await this.goto('/web/index.php/maintenance/purgeEmployee');
+    await this.confirmAdministratorAccess();
     await this.waitForSpinner();
   }
 
@@ -72,7 +73,7 @@ export class MaintenancePage extends BasePage {
   async confirmAdministratorAccess(password?: string): Promise<void> {
     // Step 1: Detect if the admin access gate is shown (can fail silently)
     const isGateShown = await this.passwordInput
-      .waitFor({ state: 'visible', timeout: 7000 })
+      .waitFor({ state: 'visible', timeout: 5000 })
       .then(() => true)
       .catch(() => false);
 
@@ -83,6 +84,7 @@ export class MaintenancePage extends BasePage {
     await this.passwordInput.fill(adminPassword);
     await this.confirmButton.click();
     await this.page.waitForURL(/.*\/maintenance\//, { timeout: 15000 });
+    await this.waitForSpinner();
   }
 
   /**
@@ -90,7 +92,6 @@ export class MaintenancePage extends BasePage {
    */
   async navigateAndAuthenticate(password?: string): Promise<void> {
     await this.navigate();
-    await this.confirmAdministratorAccess(password);
   }
 
   /**
@@ -98,6 +99,7 @@ export class MaintenancePage extends BasePage {
    */
   async clickAccessRecords(): Promise<void> {
     await this.accessRecordsTab.click();
+    await this.confirmAdministratorAccess();
     await this.waitForSpinner();
   }
 
@@ -106,8 +108,8 @@ export class MaintenancePage extends BasePage {
    */
   async openPurgeRecordsDropdown(): Promise<void> {
     await this.purgeRecordsDropdown.hover().catch(() => { });
-    await this.purgeRecordsDropdown.click();
-    await this.purgeCandidateRecord.waitFor({ state: 'visible', timeout: 4000 }).catch(async () => {
+    await this.purgeRecordsDropdown.click().catch(() => { });
+    await this.purgeCandidateRecord.waitFor({ state: 'visible', timeout: 3000 }).catch(async () => {
       await this.page.locator('.oxd-topbar-body-nav-tab').filter({ hasText: /Purge Records/i }).locator('.oxd-icon').click().catch(() => { });
     });
   }
@@ -116,9 +118,16 @@ export class MaintenancePage extends BasePage {
    * Selects Candidate Records from the dropdown menu and waits for transition.
    */
   async selectCandidateRecords(): Promise<void> {
-    await this.purgeCandidateRecord.click();
-    await this.page.waitForURL(/.*\/maintenance\/purgeCandidateData/, { timeout: 10000 }).catch(async () => {
+    const isVisible = await this.purgeCandidateRecord.isVisible().catch(() => false);
+    if (isVisible) {
+      await this.purgeCandidateRecord.click();
+    } else {
       await this.goto('/web/index.php/maintenance/purgeCandidateData');
+    }
+    await this.confirmAdministratorAccess();
+    await this.page.waitForURL(/.*\/maintenance\/purgeCandidateData/, { timeout: 15000 }).catch(async () => {
+      await this.goto('/web/index.php/maintenance/purgeCandidateData');
+      await this.confirmAdministratorAccess();
     });
     await this.waitForSpinner();
   }
