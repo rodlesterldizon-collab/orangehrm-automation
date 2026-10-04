@@ -71,27 +71,29 @@ test.describe('Admin User Role & Provisioning Suite', () => {
     await adminPage.searchUserRoleDropdown.click();
     await page.getByRole('option', { name: 'Admin' }).click();
 
-    const searchPromise = page.waitForResponse(
-      (res) => res.url().includes('/api/v2/admin/users') && res.status() === 200,
+    const searchResponsePromise = page.waitForResponse(
+      (res) => res.url().includes('/api/v2/admin/users') && res.request().method() === 'GET' && res.status() === 200,
       { timeout: 15000 }
-    ).catch(() => null);
+    );
 
     await adminPage.searchButton.click();
-    await searchPromise;
+    const searchResponse = await searchResponsePromise;
+    const payload = await searchResponse.json();
+
+    // Verify API returns admin users and total > 0
+    expect(payload.meta.total).toBeGreaterThan(0);
+    expect(payload.data.every((user: { userRole?: { name?: string } }) => user.userRole?.name === 'Admin')).toBe(true);
 
     // 2. Wait for loading spinner to clear so the grid settles
     await adminPage.waitForSpinner();
 
-    // 3. Ensure results are rendered and filtered by Admin role
-    await expect(adminPage.tableRows.first()).toBeVisible({ timeout: 15000 });
-    await expect(adminPage.userRoleCells.first()).toContainText('Admin', { timeout: 15000 });
+    // 3. Web-first assertion: wait for table rows to match the exact API result count
+    await expect(adminPage.tableRows).toHaveCount(payload.data.length, { timeout: 15000 });
+    await expect(adminPage.recordsFoundLabel).toContainText(`(${payload.meta.total}) Records Found`);
 
-    // 4. Assert all visible rows have "Admin" role
-    const userRoleCells = await adminPage.userRoleCells.all();
-    expect(userRoleCells.length).toBeGreaterThan(0);
-
-    for (const cell of userRoleCells) {
-      await expect(cell).toContainText('Admin');
+    // 4. Assert all rendered rows have "Admin" role
+    for (let i = 0; i < payload.data.length; i++) {
+      await expect(adminPage.userRoleCells.nth(i)).toHaveText('Admin');
     }
   });
 });
