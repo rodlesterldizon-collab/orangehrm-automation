@@ -6,6 +6,31 @@ on:
   pull_request:
     branches: [ main, master ]
   workflow_dispatch:
+    inputs:
+      screenshot:
+        description: 'Playwright Screenshot Mode'
+        required: false
+        default: 'only-on-failure'
+        type: choice
+        options:
+          - 'only-on-failure'
+          - 'on'
+          - 'off'
+      trace:
+        description: 'Playwright Trace Mode'
+        required: false
+        default: 'retain-on-failure'
+        type: choice
+        options:
+          - 'retain-on-failure'
+          - 'on-first-retry'
+          - 'on'
+          - 'off'
+
+env:
+  CI: "true"
+  PLAYWRIGHT_SCREENSHOT: ${{ inputs.screenshot || 'only-on-failure' }}
+  PLAYWRIGHT_TRACE: ${{ inputs.trace || 'retain-on-failure' }}
 
 jobs:
   # ─────────────────────────────────────────────────────────────────
@@ -88,11 +113,15 @@ jobs:
           SECRET_BASE_URL: ${{ secrets.BASE_URL }}
           SECRET_USERNAME: ${{ secrets.ADMIN_USERNAME }}
           SECRET_PASSWORD: ${{ secrets.ADMIN_PASSWORD }}
+          CFG_SCREENSHOT: ${{ env.PLAYWRIGHT_SCREENSHOT }}
+          CFG_TRACE: ${{ env.PLAYWRIGHT_TRACE }}
         run: |
           cp .env.example .env
           if [ -n "$SECRET_BASE_URL" ]; then echo "BASE_URL=$SECRET_BASE_URL" >> .env; fi
           if [ -n "$SECRET_USERNAME" ]; then echo "ADMIN_USERNAME=$SECRET_USERNAME" >> .env; fi
           if [ -n "$SECRET_PASSWORD" ]; then echo "ADMIN_PASSWORD=$SECRET_PASSWORD" >> .env; fi
+          echo "PLAYWRIGHT_SCREENSHOT=$CFG_SCREENSHOT" >> .env
+          echo "PLAYWRIGHT_TRACE=$CFG_TRACE" >> .env
           echo "CI=true" >> .env
 
       - name: Run Desktop E2E Tests (Chrome)
@@ -112,9 +141,11 @@ jobs:
           echo "| **Status** | ${{ job.status }} |" >> $GITHUB_STEP_SUMMARY
           echo "| **Browser Tested** | Google Chrome / Chromium |" >> $GITHUB_STEP_SUMMARY
           echo "| **Resolution** | 1280x720 (Desktop Viewport) |" >> $GITHUB_STEP_SUMMARY
-          echo "| **Artifact** | Download \`playwright-report-desktop\` for traces, videos & \`healing-report.json\` |" >> $GITHUB_STEP_SUMMARY
+          echo "| **Screenshots Mode** | \`${{ env.PLAYWRIGHT_SCREENSHOT }}\` (captured only on failure) |" >> $GITHUB_STEP_SUMMARY
+          echo "| **Trace Mode** | \`${{ env.PLAYWRIGHT_TRACE }}\` (retained only on failure) |" >> $GITHUB_STEP_SUMMARY
+          echo "| **Artifact** | Download \`playwright-report-desktop\` for failure screenshots, traces & HTML report |" >> $GITHUB_STEP_SUMMARY
 
-      - name: Upload Desktop HTML Test Report & Healing Artifacts
+      - name: Upload Desktop HTML Test Report, Traces & Screenshots
         uses: actions/upload-artifact@v4
         if: always()
         with:
@@ -149,11 +180,15 @@ jobs:
           SECRET_BASE_URL: ${{ secrets.BASE_URL }}
           SECRET_USERNAME: ${{ secrets.ADMIN_USERNAME }}
           SECRET_PASSWORD: ${{ secrets.ADMIN_PASSWORD }}
+          CFG_SCREENSHOT: ${{ env.PLAYWRIGHT_SCREENSHOT }}
+          CFG_TRACE: ${{ env.PLAYWRIGHT_TRACE }}
         run: |
           cp .env.example .env
           if [ -n "$SECRET_BASE_URL" ]; then echo "BASE_URL=$SECRET_BASE_URL" >> .env; fi
           if [ -n "$SECRET_USERNAME" ]; then echo "ADMIN_USERNAME=$SECRET_USERNAME" >> .env; fi
           if [ -n "$SECRET_PASSWORD" ]; then echo "ADMIN_PASSWORD=$SECRET_PASSWORD" >> .env; fi
+          echo "PLAYWRIGHT_SCREENSHOT=$CFG_SCREENSHOT" >> .env
+          echo "PLAYWRIGHT_TRACE=$CFG_TRACE" >> .env
           echo "CI=true" >> .env
 
       - name: Run Tablet Responsive Tests
@@ -169,13 +204,17 @@ jobs:
           echo "| **Status** | ${{ job.status }} |" >> $GITHUB_STEP_SUMMARY
           echo "| **Device Profile** | iPad (9th/8th/mini/5th/older) · 768x1024 |" >> $GITHUB_STEP_SUMMARY
           echo "| **Target Tag** | \`@tablet\` |" >> $GITHUB_STEP_SUMMARY
+          echo "| **Screenshots Mode** | \`${{ env.PLAYWRIGHT_SCREENSHOT }}\` (captured only on failure) |" >> $GITHUB_STEP_SUMMARY
+          echo "| **Trace Mode** | \`${{ env.PLAYWRIGHT_TRACE }}\` (retained only on failure) |" >> $GITHUB_STEP_SUMMARY
 
-      - name: Upload Tablet HTML Test Report
+      - name: Upload Tablet HTML Test Report, Traces & Screenshots
         uses: actions/upload-artifact@v4
         if: always()
         with:
           name: playwright-report-tablet
-          path: playwright-report/
+          path: |
+            playwright-report/
+            test-results/
           retention-days: 14
 
   # ─────────────────────────────────────────────────────────────────
@@ -203,11 +242,15 @@ jobs:
           SECRET_BASE_URL: ${{ secrets.BASE_URL }}
           SECRET_USERNAME: ${{ secrets.ADMIN_USERNAME }}
           SECRET_PASSWORD: ${{ secrets.ADMIN_PASSWORD }}
+          CFG_SCREENSHOT: ${{ env.PLAYWRIGHT_SCREENSHOT }}
+          CFG_TRACE: ${{ env.PLAYWRIGHT_TRACE }}
         run: |
           cp .env.example .env
           if [ -n "$SECRET_BASE_URL" ]; then echo "BASE_URL=$SECRET_BASE_URL" >> .env; fi
           if [ -n "$SECRET_USERNAME" ]; then echo "ADMIN_USERNAME=$SECRET_USERNAME" >> .env; fi
           if [ -n "$SECRET_PASSWORD" ]; then echo "ADMIN_PASSWORD=$SECRET_PASSWORD" >> .env; fi
+          echo "PLAYWRIGHT_SCREENSHOT=$CFG_SCREENSHOT" >> .env
+          echo "PLAYWRIGHT_TRACE=$CFG_TRACE" >> .env
           echo "CI=true" >> .env
 
       - name: Run Mobile Responsive Tests
@@ -223,13 +266,17 @@ jobs:
           echo "| **Status** | ${{ job.status }} |" >> $GITHUB_STEP_SUMMARY
           echo "| **Device Profile** | Google Pixel 7 · 393x851 (Mobile Emulation) |" >> $GITHUB_STEP_SUMMARY
           echo "| **Target Tag** | \`@mobile\` |" >> $GITHUB_STEP_SUMMARY
+          echo "| **Screenshots Mode** | \`${{ env.PLAYWRIGHT_SCREENSHOT }}\` (captured only on failure) |" >> $GITHUB_STEP_SUMMARY
+          echo "| **Trace Mode** | \`${{ env.PLAYWRIGHT_TRACE }}\` (retained only on failure) |" >> $GITHUB_STEP_SUMMARY
 
-      - name: Upload Mobile HTML Test Report
+      - name: Upload Mobile HTML Test Report, Traces & Screenshots
         uses: actions/upload-artifact@v4
         if: always()
         with:
           name: playwright-report-mobile
-          path: playwright-report/
+          path: |
+            playwright-report/
+            test-results/
           retention-days: 14
 
   # ─────────────────────────────────────────────────────────────────
@@ -252,10 +299,31 @@ jobs:
           echo "| **Tablet Responsive E2E** | Apple iPad (768x1024) | ${{ needs.tablet-e2e.result }} |" >> $GITHUB_STEP_SUMMARY
           echo "| **Mobile Responsive E2E** | Google Pixel 7 (393x851) | ${{ needs.mobile-e2e.result }} |" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "### 🚀 Container Performance Advantage" >> $GITHUB_STEP_SUMMARY
-          echo "By utilizing \`ghcr.io/rodlesterldizon-collab/core-test-suite/test-runner:v1.62.1\`, the workflow eliminated browser binary downloads on every run, saving ~3 to 4 minutes per job and safeguarding stability via \`--ipc=host\`." >> $GITHUB_STEP_SUMMARY
+          echo "### 📸 Trace & Screenshot Configuration" >> $GITHUB_STEP_SUMMARY
+          echo "| Setting | Value | Description |" >> $GITHUB_STEP_SUMMARY
+          echo "| :--- | :--- | :--- |" >> $GITHUB_STEP_SUMMARY
+          echo "| **PLAYWRIGHT_SCREENSHOT** | \`${{ env.PLAYWRIGHT_SCREENSHOT }}\` | Screenshots saved ONLY when a test fails |" >> $GITHUB_STEP_SUMMARY
+          echo "| **PLAYWRIGHT_TRACE** | \`${{ env.PLAYWRIGHT_TRACE }}\` | Traces retained and saved ONLY when a test fails |" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "### 📥 How to Download & View Artifacts" >> $GITHUB_STEP_SUMMARY
-          echo "1. Go to the **Summary** tab of this GitHub Actions run." >> $GITHUB_STEP_SUMMARY
-          echo "2. Under **Artifacts**, download \`playwright-report-api\`, \`playwright-report-desktop\`, \`playwright-report-tablet\`, or \`playwright-report-mobile\`." >> $GITHUB_STEP_SUMMARY
-          echo "3. Extract the ZIP file and run: \`npx playwright show-report <extracted_folder>\`." >> $GITHUB_STEP_SUMMARY
+          echo "### 📥 How to Find & View Failure Outputs in GitHub Actions" >> $GITHUB_STEP_SUMMARY
+          echo "1. **Locate Artifacts**:" >> $GITHUB_STEP_SUMMARY
+          echo "   - Click on the **Summary** tab on the left sidebar of this GitHub Actions run." >> $GITHUB_STEP_SUMMARY
+          echo "   - Scroll down to the **Artifacts** table at the bottom of the page." >> $GITHUB_STEP_SUMMARY
+          echo "   - Download any report package containing failed test diagnostics:" >> $GITHUB_STEP_SUMMARY
+          echo "     - \`playwright-report-desktop\`" >> $GITHUB_STEP_SUMMARY
+          echo "     - \`playwright-report-tablet\`" >> $GITHUB_STEP_SUMMARY
+          echo "     - \`playwright-report-mobile\`" >> $GITHUB_STEP_SUMMARY
+          echo "     - \`playwright-report-api\`" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "2. **View Interactive Failure Traces (Zero Setup)**:" >> $GITHUB_STEP_SUMMARY
+          echo "   - Extract the downloaded ZIP." >> $GITHUB_STEP_SUMMARY
+          echo "   - Look inside the extracted \`test-results/\` directory for any failed test folder containing \`trace.zip\`." >> $GITHUB_STEP_SUMMARY
+          echo "   - Open **[https://trace.playwright.dev](https://trace.playwright.dev)** in your browser and drag-and-drop the \`trace.zip\` file." >> $GITHUB_STEP_SUMMARY
+          echo "   - You can step through exact DOM snapshots, network payloads, console errors, and the failure point." >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "3. **View HTML Reports & Failure Screenshots Locally**:" >> $GITHUB_STEP_SUMMARY
+          echo "   - Inside the extracted folder, open \`index.html\` or run:" >> $GITHUB_STEP_SUMMARY
+          echo "     \`\`\`bash" >> $GITHUB_STEP_SUMMARY
+          echo "     npx playwright show-report <extracted-folder>" >> $GITHUB_STEP_SUMMARY
+          echo "     \`\`\`" >> $GITHUB_STEP_SUMMARY
+          echo "   - Any failed tests will have the failure screenshot and trace link attached directly to the test details card." >> $GITHUB_STEP_SUMMARY

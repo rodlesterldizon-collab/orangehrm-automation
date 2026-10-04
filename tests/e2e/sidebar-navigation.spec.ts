@@ -93,15 +93,45 @@ test.describe('Sidebar Navigation & Full Module Health Matrix Suite', () => {
     await expect(dashboardPage.navbar.titleHeader).toContainText('Claim');
   });
 
-  test.skip('[TC-NAV-12] @p2 @navigation @buzz — Navigate to Buzz via Sidebar', async ({ dashboardPage, page }, testInfo) => {
-    testInfo.annotations.push({
-      type: 'issue',
-      description: 'The Buzz module in the sidenav has been removed on October 4, 2026.',
-    });
+  test('[TC-NAV-12] @p2 @navigation @buzz — Navigate to Buzz via Sidebar', async ({ dashboardPage, page, request }, testInfo) => {
+    // Probe the Buzz endpoint before running — skip if unavailable (403/404) or removed
+    const buzzUrl = '/web/index.php/buzz/viewBuzz';
+    const probeStatus = await request.get(buzzUrl).then((r) => r.status()).catch(() => 0);
+    const buzzAvailable = probeStatus === 200;
+
+    testInfo.fixme(!buzzAvailable,
+      `Buzz endpoint returned ${probeStatus} (expected 200). ` +
+      'The Buzz module may have been removed or is unavailable on this instance.'
+    );
+
     await dashboardPage.sidebar.ensureVisible();
     await expect(dashboardPage.sidebar.buzzMenuItem).toBeVisible();
     await dashboardPage.sidebar.buzzMenuItem.click();
     await expect(page).toHaveURL(/.*\/buzz\/viewBuzz/);
     await expect(dashboardPage.navbar.titleHeader).toContainText('Buzz');
+  });
+
+  test('[TC-NAV-13] @p2 @navigation @sidebar — Sidebar Search Field Filters Menu Items', async ({ dashboardPage }) => {
+    await dashboardPage.sidebar.ensureVisible();
+
+    const searchInput = dashboardPage.sidebar.searchInput;
+    const menuLinks = dashboardPage.sidebar.menuLinks;
+
+    // 1. Typing 'a' should show more than one visible menu item
+    await searchInput.fill('a');
+    await expect(menuLinks.first()).toBeVisible({ timeout: 5000 });
+    const aCount = await menuLinks.count();
+    expect(aCount).toBeGreaterThan(1);
+
+    // 2. Typing 'admin' should show exactly one menu item: Admin
+    await searchInput.clear();
+    await searchInput.fill('admin');
+    await expect(menuLinks).toHaveCount(1, { timeout: 5000 });
+    await expect(menuLinks.first()).toContainText('Admin');
+
+    // 3. Typing 'xx' should show zero menu items (no match)
+    await searchInput.clear();
+    await searchInput.fill('xx');
+    await expect(menuLinks).toHaveCount(0, { timeout: 5000 });
   });
 });

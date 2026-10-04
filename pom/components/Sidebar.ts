@@ -5,6 +5,7 @@ export class Sidebar {
   readonly root: Locator;
   readonly container: Locator;
   readonly searchInput: Locator;
+  readonly menuLinks: Locator;
   readonly sidebarToggle: Locator;
 
   // Maintenance Administrator Access Password Re-Auth Modal
@@ -46,6 +47,7 @@ export class Sidebar {
     this.sidebarToggle = this.root.getByRole('navigation', { name: 'Sidepanel' }).getByRole('button');
     this.container = this.root;
     this.searchInput = this.root.getByPlaceholder('Search');
+    this.menuLinks = this.root.locator('li.oxd-main-menu-item-wrapper a');
 
     // Maintenance Administrator Access Password Re-Auth Modal
     this.adminAccessContainer = this.page.locator('form').first();
