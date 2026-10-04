@@ -29,14 +29,22 @@ test.describe('Maintenance Module — Authenticated Maintenance Section Suite', 
     // 1. Verify Access Records tab is visible
     await expect(maintenancePage.accessRecordsTab).toBeVisible();
 
-    // 2. Press the Access Records tab
-    await maintenancePage.accessRecordsTab.click();
+    // 2. Set up response listener before clicking so we don't miss the navigation request
+    const responsePromise = page.waitForResponse(
+      (response) =>
+        response.url().includes('/maintenance/accessEmployeeData') &&
+        (response.status() === 200 || response.status() === 304),
+      { timeout: 20000 }
+    ).catch(() => null); // non-fatal if SPA doesn't fire a nav request
 
-    // 3. Check URL changed to accessEmployeeData
-    await expect(page).toHaveURL(/.*\/maintenance\/accessEmployeeData/);
+    // 3. Press the Access Records tab and wait for navigation + spinner
+    await maintenancePage.accessRecordsTab.click();
+    await responsePromise;
+    await expect(page).toHaveURL(/.*\/maintenance\/accessEmployeeData/, { timeout: 15000 });
+    await maintenancePage.waitForSpinner();
 
     // 4. Check header changed to Download Personal Data
-    await expect(maintenancePage.accessRecordsHeader).toBeVisible();
+    await expect(maintenancePage.accessRecordsHeader).toBeVisible({ timeout: 15000 });
     await expect(maintenancePage.accessRecordsHeader).toContainText('Download Personal Data');
   });
 

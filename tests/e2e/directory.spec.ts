@@ -41,25 +41,31 @@ test.describe('Directory Search & Navigation Suite', () => {
     // 2. Ensure dropdown has updated with the selected title
     await expect(directoryPage.jobTitleDropdown).toContainText('Chief Financial Officer');
 
-    // 3. Set up response listener for directory employees GET API (status 200)
+    // 3. Set up response listener specifically for the filtered directory API call
     const responsePromise = page.waitForResponse(
       (response) =>
         response.url().includes('/api/v2/directory/employees') &&
+        response.url().includes('jobTitleId') &&
         response.request().method() === 'GET' &&
         response.status() === 200,
       { timeout: 20000 }
     );
 
-    // 4. Click Search button and wait for GET 200 response & grid update
+    // 4. Click Search button, wait for filtered API response & spinner to finish
     await directoryPage.searchButton.click();
     const response = await responsePromise;
     expect(response.status()).toBe(200);
+
+    // Verify the API response payload confirms Chief Financial Officer records were returned
+    const responseBody = await response.json();
+    expect(JSON.stringify(responseBody)).toContain('Chief Financial Officer');
+
+    await waitForSpinner(page);
     await waitForGridUpdate(page);
 
-    // 5. Assert filtered card contains the expected title (with extended timeout for grid re-render)
-    const cfoCard = directoryPage.employeeCards.filter({ hasText: 'Chief Financial Officer' }).first();
-    await expect(cfoCard).toBeVisible({ timeout: 20000 });
-    await expect(directoryPage.employeeCards.first()).toContainText('Chief Financial Officer', { timeout: 20000 });
+    // 5. Assert filtered card contains the expected title
+    await expect(directoryPage.employeeCards.first()).toBeVisible({ timeout: 15000 });
+    await expect(directoryPage.employeeCards.first()).toContainText('Chief Financial Officer', { timeout: 15000 });
   });
 
   test('[TC-UI-24] @validation @p2 @directory — Reset Filter Restores Full Count', async ({ directoryPage, page }) => {

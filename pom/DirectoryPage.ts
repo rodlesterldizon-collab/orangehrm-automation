@@ -43,7 +43,8 @@ export class DirectoryPage extends BasePage {
     // 3. Grid & Results Counter
     this.recordsFoundLabel = this.directoryContainer.locator('span').filter({ hasText: /Records? Found|No Records Found/i }).first();
     this.cardsGrid = this.directoryContainer.locator('.orangehrm-container');
-    this.employeeCards = this.directoryContainer.locator('div[class*=oxd-sheet]');
+    this.employeeCards = this.directoryContainer.locator('div[class*=oxd-sheet]')
+      .or(this.cardsGrid.locator('.orangehrm-directory-card'));
 
     // 4. Overlays & Select Options
     this.autocompleteDropdown = page.locator('#oxd-toaster_1');
