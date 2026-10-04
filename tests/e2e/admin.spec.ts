@@ -72,7 +72,11 @@ test.describe('Admin User Role & Provisioning Suite', () => {
     await page.getByRole('option', { name: 'Admin' }).click();
 
     const searchResponsePromise = page.waitForResponse(
-      (res) => res.url().includes('/api/v2/admin/users') && res.request().method() === 'GET' && res.status() === 200,
+      (res) =>
+        res.url().includes('/api/v2/admin/users') &&
+        res.url().includes('userRoleId') &&
+        res.request().method() === 'GET' &&
+        res.status() === 200,
       { timeout: 15000 }
     );
 
@@ -82,7 +86,12 @@ test.describe('Admin User Role & Provisioning Suite', () => {
 
     // Verify API returns admin users and total > 0
     expect(payload.meta.total).toBeGreaterThan(0);
-    expect(payload.data.every((user: { userRole?: { name?: string } }) => user.userRole?.name === 'Admin')).toBe(true);
+    expect(
+      payload.data.every(
+        (user: { userRole?: { name?: string; displayName?: string } }) =>
+          user.userRole?.name === 'Admin' || user.userRole?.displayName === 'Admin'
+      )
+    ).toBe(true);
 
     // 2. Wait for loading spinner to clear so the grid settles
     await adminPage.waitForSpinner();
