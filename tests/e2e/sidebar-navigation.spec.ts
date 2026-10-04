@@ -93,7 +93,11 @@ test.describe('Sidebar Navigation & Full Module Health Matrix Suite', () => {
     await expect(dashboardPage.navbar.titleHeader).toContainText('Claim');
   });
 
-  test('[TC-NAV-12] @p2 @navigation @buzz — Navigate to Buzz via Sidebar', async ({ dashboardPage, page }) => {
+  test.skip('[TC-NAV-12] @p2 @navigation @buzz — Navigate to Buzz via Sidebar', async ({ dashboardPage, page }, testInfo) => {
+    testInfo.annotations.push({
+      type: 'issue',
+      description: 'The Buzz module in the sidenav has been removed on October 4, 2026.',
+    });
     await dashboardPage.sidebar.ensureVisible();
     await expect(dashboardPage.sidebar.buzzMenuItem).toBeVisible();
     await dashboardPage.sidebar.buzzMenuItem.click();

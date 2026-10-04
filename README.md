@@ -81,6 +81,7 @@ npm run report            # View local HTML test report (or open playwright-repo
 3. **Network Latency Variance**: Public demo server response times fluctuate between 200ms and 2.5s. All assertions use Playwright web-first auto-waiting with zero hardcoded sleeps (`page.waitForTimeout`).
 4. **Deactivated SMTP / External Email**: Transactional outbound email notifications (e.g. Leave Approval emails) cannot be validated in an external mailbox because mail servers are disabled on the public demo instance.
 5. **Upstream Defect on Recruitment API**: Submitting an empty candidate email triggers an unhandled `HTTP 500` instead of `422`. Handled with `@fixme` annotation and tolerance `[422, 500]`.
+6. **Upstream Environment Change on Buzz Module (October 4, 2026)**: The public demo instance removed the Buzz link from the side navigation drawer and returned `HTTP 403` on API feed calls. Related tests (`[TC-NAV-12]`, `[TC-API-28]`) are marked with `test.skip` and annotated with `{ type: 'issue', description: 'The Buzz module in the sidenav has been removed on October 4, 2026.' }` while maintaining full health validation across all active modules.
 
 ---
 

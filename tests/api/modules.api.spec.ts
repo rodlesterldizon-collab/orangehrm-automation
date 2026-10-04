@@ -21,7 +21,11 @@ test.describe('API Module Endpoints & Sidebar Health Matrix Suite', () => {
     expect(Array.isArray(body.data)).toBe(true);
   });
 
-  test('[TC-API-28] @sanity — Buzz Newsfeed API Stream Contract', async ({ request }) => {
+  test.skip('[TC-API-28] @sanity — Buzz Newsfeed API Stream Contract', async ({ request }, testInfo) => {
+    testInfo.annotations.push({
+      type: 'issue',
+      description: 'The Buzz module in the sidenav has been removed on October 4, 2026.',
+    });
     const response = await request.get('/web/index.php/api/v2/buzz/feed?limit=10&offset=0', {
       headers: cookieHeader,
     });
@@ -42,7 +46,7 @@ test.describe('API Module Endpoints & Sidebar Health Matrix Suite', () => {
     expect(html).toContain('orangehrm');
   });
 
-  test('[TC-API-30] @smoke — Sidebar Modules Navigation Health Matrix (All 12 Core Endpoints)', async ({ request }) => {
+  test('[TC-API-30] @smoke — Sidebar Modules Navigation Health Matrix (Active Core Endpoints)', async ({ request }) => {
     const sidebarEndpoints = [
       { name: 'Admin', path: '/web/index.php/admin/viewSystemUsers' },
       { name: 'PIM', path: '/web/index.php/pim/viewEmployeeList' },
@@ -55,7 +59,6 @@ test.describe('API Module Endpoints & Sidebar Health Matrix Suite', () => {
       { name: 'Directory', path: '/web/index.php/directory/viewDirectory' },
       { name: 'Maintenance', path: '/web/index.php/maintenance/purgeEmployee' },
       { name: 'Claim', path: '/web/index.php/claim/viewAssignClaim' },
-      { name: 'Buzz', path: '/web/index.php/buzz/viewBuzz' },
     ];
 
     for (const endpoint of sidebarEndpoints) {
