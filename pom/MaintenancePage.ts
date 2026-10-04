@@ -52,8 +52,8 @@ export class MaintenancePage extends BasePage {
       .or(this.page.getByRole('menuitem', { name: /Candidate Records/i }))
       .or(this.page.locator('.oxd-topbar-body-nav-tab-link').filter({ hasText: /Candidate Records/i }));
 
-    this.purgeCandidateRecordsHeader = this.page.getByRole('heading', { name: /Purge Candidate Records|Candidate Records|Purge Records/i })
-      .or(this.page.locator('h6, h5, .orangehrm-main-title').filter({ hasText: /Purge Candidate Records|Candidate Records|Purge Records/i }));
+    this.purgeCandidateRecordsHeader = this.page.getByRole('heading', { name: /Purge Candidate Records/i })
+      .or(this.page.locator('h6, h5, .orangehrm-main-title').filter({ hasText: /Purge Candidate Records/i }));
 
     this.accessRecordsHeader = this.page.getByRole('heading', { name: /Download Personal Data|Access Records/i })
       .or(this.page.locator('h6, h5, .orangehrm-main-title').filter({ hasText: /Download Personal Data|Access Records/i }));

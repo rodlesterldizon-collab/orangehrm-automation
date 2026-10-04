@@ -82,8 +82,9 @@ test.describe('Admin User Role & Provisioning Suite', () => {
     // 2. Wait for loading spinner to clear so the grid settles
     await adminPage.waitForSpinner();
 
-    // 3. Ensure results are rendered
+    // 3. Ensure results are rendered and filtered by Admin role
     await expect(adminPage.tableRows.first()).toBeVisible({ timeout: 15000 });
+    await expect(adminPage.userRoleCells.first()).toContainText('Admin', { timeout: 15000 });
 
     // 4. Assert all visible rows have "Admin" role
     const userRoleCells = await adminPage.userRoleCells.all();
