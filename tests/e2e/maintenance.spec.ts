@@ -55,15 +55,22 @@ test.describe('Maintenance Module — Authenticated Maintenance Section Suite', 
     // 1. Open Purge Records dropdown menu
     await expect(maintenancePage.purgeRecordsDropdown).toBeVisible({ timeout: 10000 });
     await maintenancePage.openPurgeRecordsDropdown();
+    const responsePromise = page.waitForResponse(
+      (response) =>
+        response.url().includes('/maintenance/purgeCandidateData') &&
+        (response.status() === 200 || response.status() === 304),
+      { timeout: 20000 }
+    ).catch(() => null);
 
     // 2. Select Candidate Records option
     await maintenancePage.selectCandidateRecords();
+    await responsePromise;
 
     // 3. Verify URL changed to purgeCandidateData
     await expect(page).toHaveURL(/.*\/maintenance\/purgeCandidateData/, { timeout: 15000 });
 
     // 4. Verify header updated to Purge Candidate Records
     await expect(maintenancePage.purgeCandidateRecordsHeader).toBeVisible({ timeout: 15000 });
-    await expect(maintenancePage.purgeCandidateRecordsHeader).toContainText(/Purge Candidate Records|Candidate Records|Purge Records/i);
+    await expect(maintenancePage.purgeCandidateRecordsHeader).toContainText(/Purge Candidate Records/i);
   });
 });
