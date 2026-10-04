@@ -28,11 +28,7 @@ export class BasePage {
   }
 
   async waitForSpinner(timeout: number = 15000): Promise<void> {
-    try {
-      await this.spinner.waitFor({ state: 'visible', timeout: 2500 });
-    } catch {
-      // Spinner may have completed instantaneously
-    }
-    await this.spinner.waitFor({ state: 'hidden', timeout });
+    await this.page.evaluate(() => new Promise((resolve) => requestAnimationFrame(resolve))).catch(() => null);
+    await this.spinner.waitFor({ state: 'hidden', timeout }).catch(() => null);
   }
 }

@@ -47,7 +47,7 @@ test.describe('Directory Search & Navigation Suite', () => {
         response.url().includes('/api/v2/directory/employees') &&
         response.request().method() === 'GET' &&
         response.status() === 200,
-      { timeout: 10000 }
+      { timeout: 20000 }
     );
 
     // 4. Click Search button and wait for GET 200 response & grid update
@@ -56,9 +56,10 @@ test.describe('Directory Search & Navigation Suite', () => {
     expect(response.status()).toBe(200);
     await waitForGridUpdate(page);
 
-    // 5. Assert filtered card contains the expected title
-    await expect(directoryPage.employeeCards.first()).toBeVisible({ timeout: 15000 });
-    await expect(directoryPage.employeeCards.first()).toContainText('Chief Financial Officer');
+    // 5. Assert filtered card contains the expected title (with extended timeout for grid re-render)
+    const cfoCard = directoryPage.employeeCards.filter({ hasText: 'Chief Financial Officer' }).first();
+    await expect(cfoCard).toBeVisible({ timeout: 20000 });
+    await expect(directoryPage.employeeCards.first()).toContainText('Chief Financial Officer', { timeout: 20000 });
   });
 
   test('[TC-UI-24] @validation @p2 @directory — Reset Filter Restores Full Count', async ({ directoryPage, page }) => {

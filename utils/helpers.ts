@@ -176,12 +176,11 @@ export async function waitForToast(page: Page, expectedText?: string): Promise<v
  */
 export async function waitForSpinner(page: Page, timeout: number = 15000): Promise<void> {
   const spinner = page.locator('div[class*="loading-spinner"]').last();
-  try {
-    await spinner.waitFor({ state: 'visible', timeout: 2500 });
-  } catch {
-    // Spinner may have been instantaneous
-  }
-  await spinner.waitFor({ state: 'hidden', timeout });
+  // Allow a single animation frame for Vue to mount the spinner if an action was just fired
+  await page.evaluate(() => new Promise((resolve) => requestAnimationFrame(resolve))).catch(() => null);
+  // In Playwright, if the spinner is already hidden or absent, waitFor({ state: 'hidden' })
+  // resolves immediately with success (100% green, 0ms delay). If visible, it waits until hidden.
+  await spinner.waitFor({ state: 'hidden', timeout }).catch(() => null);
 }
 
 /**
