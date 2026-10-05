@@ -9,6 +9,7 @@
     "start": "node server.mjs",
     "build": "tsc --noEmit",
     "lint": "tsc --noEmit",
+    "test": "playwright test",
     "test:desktop": "playwright test tests/e2e --project=desktop-chrome",
     "test:desktop:all": "playwright test tests/e2e --project=desktop-chrome --project=desktop-edge --project=desktop-safari",
     "test:chrome": "playwright test tests/e2e --project=desktop-chrome",
