@@ -115,7 +115,8 @@ export class MaintenancePage extends BasePage {
   }
 
   /**
-   * Selects Candidate Records from the dropdown menu and waits for transition.
+   * Selects Candidate Records from the dropdown menu and waits for full page transition.
+   * Waits for URL change, network idle, and spinner to ensure SPA hydration is complete.
    */
   async selectCandidateRecords(): Promise<void> {
     const isVisible = await this.purgeCandidateRecord.isVisible().catch(() => false);
@@ -129,6 +130,9 @@ export class MaintenancePage extends BasePage {
       await this.goto('/web/index.php/maintenance/purgeCandidateData');
       await this.confirmAdministratorAccess();
     });
+    // Wait for all network requests to settle before returning — prevents
+    // heading assertions from firing before the SPA has fully hydrated.
+    await this.page.waitForLoadState('networkidle', { timeout: 15000 });
     await this.waitForSpinner();
   }
 }

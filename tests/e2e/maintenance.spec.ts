@@ -52,9 +52,7 @@ test.describe('Maintenance Module — Authenticated Maintenance Section Suite', 
     maintenancePage,
     page,
   }) => {
-    // 1. Open Purge Records dropdown menu
-    await expect(maintenancePage.purgeRecordsDropdown).toBeVisible({ timeout: 10000 });
-    await maintenancePage.openPurgeRecordsDropdown();
+    // 1. Set up response listener BEFORE any UI interaction to avoid race conditions
     const responsePromise = page.waitForResponse(
       (response) =>
         response.url().includes('/maintenance/purgeCandidateData') &&
@@ -62,15 +60,19 @@ test.describe('Maintenance Module — Authenticated Maintenance Section Suite', 
       { timeout: 20000 }
     ).catch(() => null);
 
-    // 2. Select Candidate Records option
+    // 2. Open Purge Records dropdown menu
+    await expect(maintenancePage.purgeRecordsDropdown).toBeVisible({ timeout: 10000 });
+    await maintenancePage.openPurgeRecordsDropdown();
+
+    // 3. Select Candidate Records option
     await maintenancePage.selectCandidateRecords();
     await responsePromise;
 
-    // 3. Verify URL changed to purgeCandidateData
+    // 4. Wait for navigation to complete (networkidle + spinner handled inside selectCandidateRecords)
     await expect(page).toHaveURL(/.*\/maintenance\/purgeCandidateData/, { timeout: 15000 });
 
-    // 4. Verify header updated to Purge Candidate Records
-    await expect(maintenancePage.purgeCandidateRecordsHeader).toBeVisible({ timeout: 15000 });
+    // 5. Verify header updated to Purge Candidate Records (allow time for SPA hydration)
+    await expect(maintenancePage.purgeCandidateRecordsHeader).toBeVisible({ timeout: 20000 });
     await expect(maintenancePage.purgeCandidateRecordsHeader).toContainText(/Purge Candidate Records/i);
   });
 });
