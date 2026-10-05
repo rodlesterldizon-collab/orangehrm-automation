@@ -21,16 +21,23 @@ test.describe('API Leave Management & Balance Reports Contract Suite', () => {
     expect(body).toHaveProperty('data');
     expect(body).toHaveProperty('meta');
     expect(Array.isArray(body.data)).toBe(true);
+
+    // Deep validation: If data items exist, assert object schema properties
+    if (body.data.length > 0) {
+      const reportItem = body.data[0];
+      expect(reportItem).toHaveProperty('leaveTypeName');
+      expect(reportItem).toHaveProperty('balanceDays');
+    }
   });
 
-  test('[TC-API-20] @validation — Leave Balance Report Rejects Invalid Report Identifier with 422/404/400', async ({ request }) => {
+  test('[TC-API-20] @validation — Leave Balance Report Rejects Invalid Query Parameters with 400', async ({ request }) => {
     const response = await request.get(
       '/web/index.php/api/v2/leave/reports/data?limit=50&offset=0&fromDate=invalid-date&name=non_existent_report_definition',
       { headers: cookieHeader }
     );
 
-    // Invalid report definition or malformed date parameters return 422, 404, or 400
-    expect([400, 404, 422]).toContain(response.status());
+    // Standardize validation failure status assertion according to OrangeHRM API spec (HTTP 400 Bad Request)
+    expect(response.status()).toBe(400);
   });
 
   test('[TC-API-21] @sanity — Leave Types List Contract for Leave Assignment', async ({ request }) => {
@@ -43,5 +50,13 @@ test.describe('API Leave Management & Balance Reports Contract Suite', () => {
 
     expect(body.data).toBeDefined();
     expect(Array.isArray(body.data)).toBe(true);
+
+    // Verify key fields on leave type objects when populated
+    if (body.data.length > 0) {
+      const leaveType = body.data[0];
+      expect(leaveType).toHaveProperty('id');
+      expect(leaveType).toHaveProperty('name');
+      expect(leaveType).toHaveProperty('deleted');
+    }
   });
 });

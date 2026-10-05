@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { getAdminCredentials } from '../../utils/helpers.js';
+import { getAdminCredentials, getAuthCookie } from '../../utils/helpers.js';
 
 test.describe('API Authentication & Session Contract Suite', () => {
   const creds = getAdminCredentials();
@@ -35,7 +35,7 @@ test.describe('API Authentication & Session Contract Suite', () => {
     const latency = Date.now() - startTime;
 
     // 3. Assert HTTP 302 Redirect to dashboard and latency SLA
-    expect([200, 302]).toContain(response.status());
+    expect(response.status()).toBe(302);
     expect(latency).toBeLessThan(5000);
 
     // 4. Assert session cookie is set
@@ -61,7 +61,8 @@ test.describe('API Authentication & Session Contract Suite', () => {
       maxRedirects: 0,
     });
 
-    // In OrangeHRM, failed auth redirects back to /auth/login (not /dashboard/index)
+    // Failed auth must return HTTP 302 redirecting back to /auth/login
+    expect(response.status()).toBe(302);
     const location = response.headers()['location'] || '';
     expect(location).toContain('/auth/login');
   });
@@ -82,15 +83,23 @@ test.describe('API Authentication & Session Contract Suite', () => {
       maxRedirects: 0,
     });
 
-    // Submitting blank credentials fails auth and redirects to /auth/login
-    expect([200, 302]).toContain(response.status());
+    // Blank submission must reject via HTTP 302 back to /auth/login
+    expect(response.status()).toBe(302);
     const location = response.headers()['location'] || '';
     expect(location).toContain('/auth/login');
   });
 
   test('[TC-API-04] @sanity — Logout endpoint invalidates session token', async ({ request }) => {
-    const logoutRes = await request.get('/web/index.php/auth/logout', { maxRedirects: 0 });
-    expect([200, 302]).toContain(logoutRes.status());
+    // 1. Authenticate first to acquire a valid session header
+    const authCookie = await getAuthCookie(request);
+
+    // 2. Execute logout with valid session header
+    const logoutRes = await request.get('/web/index.php/auth/logout', {
+      headers: { Cookie: `orangehrm=${authCookie}` },
+      maxRedirects: 0,
+    });
+
+    expect(logoutRes.status()).toBe(302);
     const location = logoutRes.headers()['location'] || '';
     expect(location).toContain('/auth/login');
   });
@@ -105,9 +114,12 @@ test.describe('API Authentication & Session Contract Suite', () => {
       maxRedirects: 0,
     });
 
-    // In OrangeHRM, invalid CSRF fails auth and redirects back to /auth/login or throws 419/403
-    expect([200, 302, 419, 403]).toContain(response.status());
-    const location = response.headers()['location'] || '';
-    expect(location).toContain('/auth/login');
+    // Invalid CSRF tokens either redirect back to login (302) or return a client security error (400/403/419)
+    if (response.status() === 302) {
+      const location = response.headers()['location'] || '';
+      expect(location).toContain('/auth/login');
+    } else {
+      expect([400, 403, 419]).toContain(response.status());
+    }
   });
 });

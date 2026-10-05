@@ -1,44 +1,78 @@
 import { test, expect } from '@playwright/test';
+import { getAdminCredentials, getAuthCookie } from '../../utils/helpers.js';
 
 test.describe('API Security, Headers & Re-Auth Gate Suite', () => {
-  test('[TC-API-22] @security — Maintenance purge rejects unauthorized requests with 401', async ({ request }) => {
-    // Attempting to hit maintenance validate-password with incorrect password
-    const response = await request.post('/web/index.php/api/v2/maintenance/purge/validate-password', {
-      data: {
-        password: 'DefinatelyWrongPassword!',
-      },
-    });
+  test('[TC-API-22] @security — Administrator password re-authentication gate (/auth/adminVerify)', async ({ request }) => {
+    const creds = getAdminCredentials();
+    const authCookie = await getAuthCookie(request, creds.username, creds.password);
+    const cookieHeader = { Cookie: `orangehrm=${authCookie}` };
 
-    expect([401, 403, 404]).toContain(response.status());
+    // 1. Access protected maintenance purge endpoint to trigger re-auth challenge
+    const challengeRes = await request.get('/web/index.php/maintenance/purgeEmployee', {
+      headers: cookieHeader,
+    });
+    expect(challengeRes.status()).toBe(200);
+    const challengeHtml = await challengeRes.text();
+    const tokenMatch = challengeHtml.match(/:token="&quot;([^&]+)&quot;"/);
+    const csrfToken = tokenMatch ? tokenMatch[1] : '';
+    expect(csrfToken).toBeTruthy();
+
+    // 2. Submit incorrect password -> returns HTTP 200 and stays on admin verify challenge
+    const invalidVerifyRes = await request.post('/web/index.php/auth/adminVerify', {
+      form: {
+        _token: csrfToken,
+        password: 'IncorrectPassword999!',
+      },
+      headers: {
+        ...cookieHeader,
+        'Content-Type': 'application/x-www-form-urlencoded',
+      },
+      maxRedirects: 0,
+    });
+    expect(invalidVerifyRes.status()).toBe(200);
+    const invalidHtml = await invalidVerifyRes.text();
+    expect(invalidHtml).toContain('auth-admin-access');
+    expect(invalidHtml).toContain('invalid_credentials');
+
+    // 3. Extract fresh CSRF token if present, otherwise reuse existing token
+    const freshTokenMatch = invalidHtml.match(/:token="&quot;([^&]+)&quot;"/);
+    const validCsrfToken = freshTokenMatch ? freshTokenMatch[1] : csrfToken;
+
+    // 4. Submit correct password -> returns HTTP 302 Found redirecting to /maintenance/purgeEmployee
+    const validVerifyRes = await request.post('/web/index.php/auth/adminVerify', {
+      form: {
+        _token: validCsrfToken,
+        password: creds.password,
+      },
+      headers: {
+        ...cookieHeader,
+        'Content-Type': 'application/x-www-form-urlencoded',
+      },
+      maxRedirects: 0,
+    });
+    expect(validVerifyRes.status()).toBe(302);
+    const redirectUrl = validVerifyRes.headers()['location'] || '';
+    expect(redirectUrl).toContain('/maintenance/purgeEmployee');
+
+    // 5. Follow the redirect to /maintenance/purgeEmployee -> returns HTTP 200
+    const purgeRes = await request.get('/web/index.php/maintenance/purgeEmployee', {
+      headers: cookieHeader,
+    });
+    expect(purgeRes.status()).toBe(200);
   });
 
   test('[SEC-HDR-01] @security — Server returns standard OWASP security headers', async ({ request }) => {
     const response = await request.get('/web/index.php/auth/login');
     const headers = response.headers();
 
-    // Headers verification (Playwright normalizes keys to lowercase)
+    // Playwright automatically normalizes header keys to lowercase
     expect(headers['content-type']).toBeDefined();
-    if (headers['x-content-type-options']) {
-      expect(headers['x-content-type-options']).toBe('nosniff');
-    }
+    expect(headers['x-content-type-options']).toBe('nosniff');
   });
 
-  test('[TC-API-33] @security @validation — Admin User Creation Idempotency & Duplicate Rejection Gate', async ({ request }) => {
-    // 1. Authenticate to get session cookie
-    const loginPageRes = await request.get('/web/index.php/auth/login');
-    const html = await loginPageRes.text();
-    const csrfToken = html.match(/:token="&quot;([^&]+)&quot;"/)?.[1] || '';
-
-    const authRes = await request.post('/web/index.php/auth/validate', {
-      form: {
-        _token: csrfToken,
-        username: process.env.ADMIN_USERNAME || 'Admin',
-        password: process.env.ADMIN_PASSWORD || 'admin123',
-      },
-      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-      maxRedirects: 0,
-    });
-    const authCookie = authRes.headers()['set-cookie']?.match(/orangehrm=([^;]+)/)?.[1] || '';
+  test('[TC-API-33] @security @validation — Admin User Creation Uniqueness & Duplicate Rejection Gate', async ({ request }) => {
+    const creds = getAdminCredentials();
+    const authCookie = await getAuthCookie(request, creds.username, creds.password);
     const cookieHeader = { Cookie: `orangehrm=${authCookie}` };
 
     // Fetch a real empNumber — empNumber: 1 may not exist in all environments
@@ -62,28 +96,25 @@ test.describe('API Security, Headers & Re-Auth Gate Suite', () => {
     let createdUserId: number | null = null;
 
     try {
-      // 2. First creation request (Must succeed)
+      // 1. First creation request (Must succeed)
       const res1 = await request.post('/web/index.php/api/v2/admin/users', {
         headers: cookieHeader,
         data: userPayload,
       });
-      const res1Body = await res1.json().catch(() => res1.text());
-      console.log('[res1]', res1.status(), JSON.stringify(res1Body));
+      const res1Body = await res1.json().catch(() => null);
       expect([200, 201]).toContain(res1.status());
-      createdUserId = (res1Body as any)?.data?.id ?? null;
+      createdUserId = res1Body?.data?.id ?? null;
 
-      // 3. Second identical request (Must fail — duplicate username)
+      // 2. Second identical request (Must fail — duplicate username)
       const res2 = await request.post('/web/index.php/api/v2/admin/users', {
         headers: cookieHeader,
         data: userPayload,
       });
-      const res2Body = await res2.json().catch(() => res2.text());
-      console.log('[res2]', res2.status(), JSON.stringify(res2Body));
       expect(res2.status()).toBe(422); // 422 Unprocessable Entity ("Already exists")
     } finally {
-      // 4. Teardown — delete the created user to avoid stale data on future runs
+      // 3. Teardown — delete the created user to avoid stale data on future runs
       if (createdUserId) {
-        await request.delete(`/web/index.php/api/v2/admin/users`, {
+        await request.delete('/web/index.php/api/v2/admin/users', {
           headers: cookieHeader,
           data: { ids: [createdUserId] },
         });
@@ -91,7 +122,7 @@ test.describe('API Security, Headers & Re-Auth Gate Suite', () => {
     }
   });
 
-  test('[TC-API-34] @security — Rate Limiting & High-Concurrency Burst Resilience (HTTP 429 or Graceful Throttling)', async ({ request }) => {
+  test('[TC-API-34] @security — High-Concurrency Burst Resilience (Server returns 200/429 without 5xx errors)', async ({ request }) => {
     // Fire a burst of 15 rapid concurrent requests to an unauthenticated endpoint
     const burstPromises = Array.from({ length: 15 }, () =>
       request.get('/web/index.php/auth/login')
@@ -100,16 +131,14 @@ test.describe('API Security, Headers & Re-Auth Gate Suite', () => {
     const responses = await Promise.all(burstPromises);
     const statusCodes = responses.map((r) => r.status());
 
-    // Server must respond cleanly with 200 (handled) or 429 (Too Many Requests / Rate Limited)
-    // Server must NEVER crash with 500 Internal Server Error
     for (const status of statusCodes) {
-      expect([200, 429, 302]).toContain(status);
+      expect([200, 302, 429]).toContain(status);
+      expect(status).toBeLessThan(500); // Verify no 500 server crashes under load
     }
   });
 
-  test('[TC-API-35] @security — Forbidden System Assets & Sitemap Access Restriction (HTTP 403/404)', async ({ request }) => {
+  test('[TC-API-35] @security — Forbidden System Assets Access Restriction (HTTP 403/404/302)', async ({ request }) => {
     const sensitivePaths = [
-      '/sitemap.xml',
       '/.env',
       '/.git/config',
       '/web/.env',
@@ -117,17 +146,22 @@ test.describe('API Security, Headers & Re-Auth Gate Suite', () => {
 
     for (const path of sensitivePaths) {
       const response = await request.get(path, { maxRedirects: 0 });
-      // Forbidden (403), Not Found (404), or Redirect to Login (302) is acceptable
+      const status = response.status();
+
+      // Ensure sensitive configuration files are strictly forbidden, missing, or redirected
       expect(
-        [403, 404, 302, 200].includes(response.status()),
-        `Path ${path} returned unexpected status ${response.status()}`
+        [403, 404, 302].includes(status),
+        `Sensitive path ${path} exposed with status ${status}`
       ).toBe(true);
 
-      if (response.status() === 200 && path.includes('.env')) {
-        // Must not expose actual env secrets
-        const text = await response.text();
-        expect(text).not.toContain('ADMIN_PASSWORD');
+      if (status === 302) {
+        const location = response.headers()['location'];
+        expect(location).toMatch(/login|error/i);
       }
     }
+
+    // Sitemap does not exist on this demo site — verify server returns 403 Forbidden or 404 Not Found
+    const sitemapRes = await request.get('/sitemap.xml');
+    expect([403, 404].includes(sitemapRes.status())).toBe(true);
   });
 });

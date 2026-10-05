@@ -10,7 +10,6 @@ test.describe('API Module Endpoints & Sidebar Health Matrix Suite', () => {
   });
 
   test('[TC-API-27] @sanity — Claim Requests Default Search Contract', async ({ request }) => {
-    // Default search with no extra filters applied
     const response = await request.get('/web/index.php/api/v2/claim/requests?limit=50&offset=0', {
       headers: cookieHeader,
     });
@@ -24,7 +23,7 @@ test.describe('API Module Endpoints & Sidebar Health Matrix Suite', () => {
   test.skip('[TC-API-28] @sanity — Buzz Newsfeed API Stream Contract', async ({ request }, testInfo) => {
     testInfo.annotations.push({
       type: 'issue',
-      description: 'The Buzz module in the sidenav has been removed on October 4, 2026.',
+      description: 'The Buzz module in the sidenav was deprecated/removed.',
     });
     const response = await request.get('/web/index.php/api/v2/buzz/feed?limit=10&offset=0', {
       headers: cookieHeader,
@@ -43,7 +42,8 @@ test.describe('API Module Endpoints & Sidebar Health Matrix Suite', () => {
 
     expect(response.status()).toBe(200);
     const html = await response.text();
-    expect(html).toContain('orangehrm');
+    // Verify specific Maintenance form elements exist in HTML markup
+    expect(html).toMatch(/purgeEmployee|oxd-form|auth-admin-access/i);
   });
 
   test('[TC-API-30] @smoke — Sidebar Modules Navigation Health Matrix (Active Core Endpoints)', async ({ request }) => {
@@ -53,7 +53,7 @@ test.describe('API Module Endpoints & Sidebar Health Matrix Suite', () => {
       { name: 'Leave', path: '/web/index.php/leave/viewLeaveList' },
       { name: 'Time', path: '/web/index.php/time/viewEmployeeTimesheet' },
       { name: 'Recruitment', path: '/web/index.php/recruitment/viewCandidates' },
-      { name: 'My Info', path: '/web/index.php/pim/viewPersonalDetails/empNumber/7' },
+      { name: 'My Info', path: '/web/index.php/pim/viewMyDetails' }, // Replaced hardcoded empNumber/7 with dynamic route
       { name: 'Performance', path: '/web/index.php/performance/searchEvaluatePerformanceReview' },
       { name: 'Dashboard', path: '/web/index.php/dashboard/index' },
       { name: 'Directory', path: '/web/index.php/directory/viewDirectory' },
@@ -61,12 +61,16 @@ test.describe('API Module Endpoints & Sidebar Health Matrix Suite', () => {
       { name: 'Claim', path: '/web/index.php/claim/viewAssignClaim' },
     ];
 
-    for (const endpoint of sidebarEndpoints) {
-      const res = await request.get(endpoint.path, {
-        headers: cookieHeader,
-      });
+    // Execute health checks concurrently for faster execution
+    const results = await Promise.all(
+      sidebarEndpoints.map(async (endpoint) => {
+        const res = await request.get(endpoint.path, { headers: cookieHeader });
+        return { ...endpoint, status: res.status() };
+      })
+    );
 
-      expect(res.status(), `Endpoint [${endpoint.name}] at ${endpoint.path} failed to load`).toBe(200);
+    for (const result of results) {
+      expect(result.status, `Endpoint [${result.name}] at ${result.path} failed to load`).toBe(200);
     }
   });
 

@@ -1,24 +1,25 @@
-import { test, expect } from '@playwright/test';
+import { test, expect, type APIRequestContext } from '@playwright/test';
 import { getAuthCookie } from '../../utils/helpers.js';
 import { generateUserData } from '../../utils/test-data.js';
 
 test.describe('API Admin User Role & RBAC Contract Suite', () => {
   let cookieHeader: { Cookie: string };
 
-  let empNumber: number;
-
   test.beforeEach(async ({ request }) => {
     const authCookie = await getAuthCookie(request);
     cookieHeader = { Cookie: `orangehrm=${authCookie}` };
+  });
 
-    // Fetch a real empNumber once — hardcoding 1 is not portable across environments
+  // Helper function to fetch dynamic empNumber only when required for user creation
+  async function fetchValidEmpNumber(request: APIRequestContext): Promise<number> {
     const empRes = await request.get('/web/index.php/api/v2/pim/employees?limit=1', {
       headers: cookieHeader,
     });
     const empBody = await empRes.json();
-    empNumber = empBody?.data?.[0]?.empNumber;
+    const empNumber = empBody?.data?.[0]?.empNumber;
     if (!empNumber) throw new Error('No employees found in DB — empNumber required to create users');
-  });
+    return empNumber;
+  }
 
   test('[TC-API-11] @smoke — System Users List Contract & Properties', async ({ request }) => {
     const response = await request.get('/web/index.php/api/v2/admin/users?limit=20&offset=0', {
@@ -40,6 +41,7 @@ test.describe('API Admin User Role & RBAC Contract Suite', () => {
   });
 
   test('[TC-API-12] @sanity — Create System User with Admin Role', async ({ request }) => {
+    const empNumber = await fetchValidEmpNumber(request);
     const userData = generateUserData('Admin');
     let createdUserId: number | null = null;
 
@@ -55,8 +57,7 @@ test.describe('API Admin User Role & RBAC Contract Suite', () => {
         },
       });
 
-      // 201 Created or 200 depending on demo state
-      expect([200, 201]).toContain(response.status());
+      expect(response.status()).toBe(200);
       const body = await response.json();
       expect(body.data.userName).toBe(userData.username);
       createdUserId = body?.data?.id ?? null;
@@ -79,7 +80,7 @@ test.describe('API Admin User Role & RBAC Contract Suite', () => {
         password: 'Password@123',
         status: true,
         userRoleId: 1,
-        empNumber,
+        empNumber: 1,
       },
     });
 

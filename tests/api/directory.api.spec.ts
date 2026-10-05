@@ -36,7 +36,12 @@ test.describe('API Directory & Dashboard Shortcuts Contract Suite', () => {
     const body = await response.json();
 
     expect(body.data).toBeDefined();
+    expect(body.data).not.toBeNull();
     expect(typeof body.data).toBe('object');
+
+    // Deep check: Verify presence of key dashboard feature flags (using array syntax for keys with literal dots)
+    expect(body.data).toHaveProperty(['leave.assign_leave']);
+    expect(body.data).toHaveProperty(['leave.apply_leave']);
   });
 
   test('[TC-API-31] @validation — Directory Search Boundary Handling for Out-of-Range Offset', async ({ request }) => {
@@ -47,8 +52,10 @@ test.describe('API Directory & Dashboard Shortcuts Contract Suite', () => {
 
     expect(response.status()).toBe(200);
     const body = await response.json();
+
     expect(body.data).toBeDefined();
     expect(Array.isArray(body.data)).toBe(true);
     expect(body.data.length).toBe(0);
+    expect(body).toHaveProperty('meta');
   });
 });

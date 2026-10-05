@@ -1,22 +1,65 @@
 import { test, expect } from '@playwright/test';
-import Ajv from 'ajv';
-import { getAdminCredentials } from '../../utils/helpers.js';
+import Ajv, { type ErrorObject } from 'ajv';
+import { getAdminCredentials, getAuthCookie } from '../../utils/helpers.js';
 
-const ajv = new (Ajv as any)({ allErrors: true });
+const AjvClass = Ajv as unknown as typeof Ajv.default;
+const ajv = new AjvClass({ allErrors: true });
 
-// Strict JSON Schema for Dashboard Shortcuts API
+// 1. Precise Schemas Defined at Top-Level
 const shortcutsResponseSchema = {
   type: 'object',
   required: ['data'],
   properties: {
     data: {
       type: 'object',
+      required: [
+        'leave.assign_leave',
+        'leave.leave_list',
+        'leave.apply_leave',
+        'leave.my_leave',
+        'time.employee_timesheet',
+        'time.my_timesheet',
+      ],
+      properties: {
+        'leave.assign_leave': { type: 'boolean' },
+        'leave.leave_list': { type: 'boolean' },
+        'leave.apply_leave': { type: 'boolean' },
+        'leave.my_leave': { type: 'boolean' },
+        'time.employee_timesheet': { type: 'boolean' },
+        'time.my_timesheet': { type: 'boolean' },
+      },
+      additionalProperties: { type: 'boolean' },
     },
   },
   additionalProperties: true,
 };
 
-// Strict JSON Schema for Standard API Error Envelope (404 / 422)
+const usersSchema = {
+  type: 'object',
+  required: ['data', 'meta'],
+  properties: {
+    data: {
+      type: 'array',
+      items: {
+        type: 'object',
+        required: ['id', 'userName'],
+        properties: {
+          id: { type: 'number' },
+          userName: { type: 'string' },
+        },
+      },
+    },
+    meta: {
+      type: 'object',
+      required: ['total'],
+      properties: {
+        total: { type: 'number' },
+      },
+    },
+  },
+  additionalProperties: true,
+};
+
 const errorEnvelopeSchema = {
   type: 'object',
   required: ['error'],
@@ -35,161 +78,88 @@ const errorEnvelopeSchema = {
   additionalProperties: false,
 };
 
+// Pre-compiled validators for maximum speed
+const validateShortcuts = ajv.compile(shortcutsResponseSchema);
+const validateUsers = ajv.compile(usersSchema);
+const validateError = ajv.compile(errorEnvelopeSchema);
+
 test.describe('API Contract — AJV JSON Schema Validation Suite', () => {
   const creds = getAdminCredentials();
   let authCookie = '';
 
   test.beforeEach(async ({ request }) => {
-    // 1. Fetch CSRF token from login page
-    const loginPageRes = await request.get('/web/index.php/auth/login');
-    const html = await loginPageRes.text();
-    const tokenMatch = html.match(/:token="&quot;([^&]+)&quot;"/);
-    const csrfToken = tokenMatch ? tokenMatch[1] : '';
-
-    // 2. Perform authentication to retrieve session cookie
-    const validateRes = await request.post('/web/index.php/auth/validate', {
-      form: {
-        _token: csrfToken,
-        username: creds.username,
-        password: creds.password,
-      },
-      maxRedirects: 0,
-    });
-
-    const rawSetCookie = validateRes.headers()['set-cookie'] || '';
-    const match = rawSetCookie.match(/orangehrm=([^;]+)/);
-    authCookie = match ? match[1] : '';
+    authCookie = await getAuthCookie(request, creds.username, creds.password);
   });
 
   test('[SCHEMA-01] @sanity — Dashboard Shortcuts matches strict AJV JSON schema', async ({ request }) => {
     const response = await request.get('/web/index.php/api/v2/dashboard/shortcuts', {
-      headers: {
-        Cookie: `orangehrm=${authCookie}`,
-      },
+      headers: { Cookie: `orangehrm=${authCookie}` },
     });
     expect(response.status()).toBe(200);
 
     const body = await response.json();
-
-    // Validate using AJV
-    const validate = ajv.compile(shortcutsResponseSchema);
-    const valid = validate(body);
+    const valid = validateShortcuts(body);
 
     if (!valid) {
-      console.error('AJV Schema Errors for Shortcuts:', validate.errors);
+      console.error('AJV Schema Errors for Shortcuts:', validateShortcuts.errors);
     }
     expect(valid).toBe(true);
   });
 
   test('[SCHEMA-02] @sanity — System Users list matches strict AJV JSON schema', async ({ request }) => {
     const response = await request.get('/web/index.php/api/v2/admin/users?limit=5&offset=0', {
-      headers: {
-        Cookie: `orangehrm=${authCookie}`,
-      },
+      headers: { Cookie: `orangehrm=${authCookie}` },
     });
     expect(response.status()).toBe(200);
 
     const body = await response.json();
-
-    const usersSchema = {
-      type: 'object',
-      required: ['data', 'meta'],
-      properties: {
-        data: { type: 'array' },
-        meta: {
-          type: 'object',
-          required: ['total'],
-          properties: {
-            total: { type: 'number' },
-          },
-        },
-      },
-    };
-
-    const validate = ajv.compile(usersSchema);
-    const valid = validate(body);
+    const valid = validateUsers(body);
 
     if (!valid) {
-      console.error('AJV Schema Errors for System Users:', validate.errors);
+      console.error('AJV Schema Errors for System Users:', validateUsers.errors);
     }
     expect(valid).toBe(true);
   });
 
   test('[SCHEMA-03] @validation — Negative Contract: Schema rejects mutated payload with type violation and missing required fields', async ({ request }) => {
-    // 1. Fetch genuine live API payload
     const response = await request.get('/web/index.php/api/v2/admin/users?limit=5&offset=0', {
-      headers: {
-        Cookie: `orangehrm=${authCookie}`,
-      },
+      headers: { Cookie: `orangehrm=${authCookie}` },
     });
     expect(response.status()).toBe(200);
     const liveBody = await response.json();
 
-    const strictUsersSchema = {
-      type: 'object',
-      required: ['data', 'meta'],
-      properties: {
-        data: { type: 'array' },
-        meta: {
-          type: 'object',
-          required: ['total'],
-          properties: {
-            total: { type: 'number' }, // Expected to be number
-          },
-        },
-      },
-      additionalProperties: true,
-    };
+    // Baseline check
+    expect(validateUsers(liveBody)).toBe(true);
 
-    const validate = ajv.compile(strictUsersSchema);
-
-    // Baseline: legitimate response passes
-    expect(validate(liveBody)).toBe(true);
-
-    // Negative Mutation 1: Corrupt data type (convert numeric 'total' to string)
+    // Mutation 1: Corrupt total type to string
     const corruptedTypePayload = JSON.parse(JSON.stringify(liveBody));
     corruptedTypePayload.meta.total = 'INVALID_STRING_TOTAL';
 
-    const isTypeValid = validate(corruptedTypePayload);
+    const isTypeValid = validateUsers(corruptedTypePayload);
     expect(isTypeValid).toBe(false);
-    expect(validate.errors).toBeDefined();
-    expect(validate.errors!.some((e: any) => e.message?.includes('must be number'))).toBe(true);
+    expect(validateUsers.errors?.some((e: ErrorObject) => e.message?.includes('must be number'))).toBe(true);
 
-    // Negative Mutation 2: Delete required top-level 'data' field
+    // Mutation 2: Remove required 'data' field
     const missingRequiredPayload = JSON.parse(JSON.stringify(liveBody));
     delete missingRequiredPayload.data;
 
-    const isMissingValid = validate(missingRequiredPayload);
+    const isMissingValid = validateUsers(missingRequiredPayload);
     expect(isMissingValid).toBe(false);
-    expect(validate.errors!.some((e: any) => e.message?.includes("must have required property 'data'"))).toBe(true);
+    expect(validateUsers.errors?.some((e: ErrorObject) => e.message?.includes("must have required property 'data'"))).toBe(true);
   });
 
   test('[SCHEMA-04] @validation — Negative Contract: 404 Error response fails Success Schema and conforms to Error Schema', async ({ request }) => {
-    // 1. Intentionally query a non-existent resource ID to trigger an API error
     const nonExistentResponse = await request.get('/web/index.php/api/v2/admin/users/9999999', {
-      headers: {
-        Cookie: `orangehrm=${authCookie}`,
-      },
+      headers: { Cookie: `orangehrm=${authCookie}` },
     });
 
     expect(nonExistentResponse.status()).toBe(404);
     const errorBody = await nonExistentResponse.json();
 
-    // 2. Success schema must REJECT the error response (does not have required 'data' array)
-    const successSchema = {
-      type: 'object',
-      required: ['data', 'meta'],
-      properties: {
-        data: { type: 'array' },
-        meta: { type: 'object' },
-      },
-    };
-    const validateSuccess = ajv.compile(successSchema);
-    const isSuccessValid = validateSuccess(errorBody);
-    expect(isSuccessValid).toBe(false); // Schema correctly fails on error payload
+    // 1. Success schema must REJECT the error response
+    expect(validateUsers(errorBody)).toBe(false);
 
-    // 3. Strict Error Schema must ACCEPT the error response
-    const validateError = ajv.compile(errorEnvelopeSchema);
+    // 2. Strict Error Schema must ACCEPT the error response
     const isErrorValid = validateError(errorBody);
     if (!isErrorValid) {
       console.error('AJV Schema Errors for Error Envelope:', validateError.errors);
