@@ -1,5 +1,5 @@
 import { test, expect, type APIRequestContext } from '@playwright/test';
-import { getAuthCookie } from '../../utils/helpers.js';
+import { getAuthCookie, getAdminCredentials } from '../../utils/helpers.js';
 import { generateUserData } from '../../utils/test-data.js';
 
 test.describe('API Admin User Role & RBAC Contract Suite', () => {
@@ -73,11 +73,12 @@ test.describe('API Admin User Role & RBAC Contract Suite', () => {
   });
 
   test('[TC-API-13] @validation — Rejects Duplicate Username Creation with 422', async ({ request }) => {
+    const creds = getAdminCredentials();
     const response = await request.post('/web/index.php/api/v2/admin/users', {
       headers: cookieHeader,
       data: {
-        username: 'Admin', // Existing built-in username — always a duplicate
-        password: 'Password@123',
+        username: creds.username, // Existing built-in username — always a duplicate
+        password: creds.password,
         status: true,
         userRoleId: 1,
         empNumber: 1,

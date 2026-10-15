@@ -761,13 +761,13 @@ From the exploratory testing session, **five high-value test cases** were select
 
 1. **`[TC-UI-16]` / `[TC-UI-18]` Admin User Provisioning & Collision Validation (P0 — Critical)**
    * *Why Selected*: System user management is the core of Access Governance and RBAC. Creating admin accounts and enforcing uniqueness constraints (`Admin` role binding, duplicate username rejection) ensures tenant isolation and prevents unauthorized privilege escalation.
-2. **`[TC-PIM-01]` Employee Onboarding & Custom ID Persistence (P0 — Critical)**
+2. **`[TC-UI-09]` / `[TC-UI-10]` Employee Onboarding & Custom ID Persistence (P0 — Critical)**
    * *Why Selected*: In an HRIS, the Employee entity is the relational root for all downstream operations (payroll, time tracking, leave requests, performance appraisals). Verifying custom employee ID persistence ensures foundational data integrity.
 3. **`[TC-MAINT-01 / TC-MAINT-02]` Secondary Administrator Password Re-Auth Gateway (P0 — Security Boundary)**
    * *Why Selected*: The Maintenance module contains destructive capabilities (GDPR personal data purge, employee record deletion). Verifying that the secondary password challenge wall cannot be bypassed is vital for data privacy and compliance.
-4. **`[TC-API-01 / TC-SCHEMA-01]` REST API Session Validation & AJV Schema Governance (P1 — Core Architecture)**
+4. **`[TC-API-01 / SCHEMA-01]` REST API Session Validation & AJV Schema Governance (P1 — Core Architecture)**
    * *Why Selected*: Validating backend REST APIs and enforcing strict JSON Schema (Draft-07) contracts on API responses ensures that microservice serialization bugs and contract drift are caught before breaking frontend components.
-5. **`[TC-NAV-13 / TC-RESP-01]` Responsive Viewport Drawer & Real-Time Search Filtering (P2 — Usability & Multi-Device)**
+5. **`[TC-NAV-13 / TC-UI-25]` Responsive Viewport Drawer & Real-Time Search Filtering (P2 — Usability & Multi-Device)**
    * *Why Selected*: Modern HR teams access portals on desktops, iPads, and mobile phones. Validating mobile hamburger drawer toggling and instant sidebar search filtering ensures consistent usability across device profiles.
 
 ---
